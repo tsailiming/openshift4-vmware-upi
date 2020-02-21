@@ -1,0 +1,226 @@
+Validated on 2020-02-21 04:22:01
+
+LB VIP 
+===
+Masters LB IP = 192.168.0.230
+APPS LB IP = 192.168.0.230
+
+Masters LB VIP Test
+===
+bootstrap/6443 [OK]
+bootstrap/22623 [OK]
+master0/6443 [OK]
+master0/22623 [OK]
+master1/6443 [FAILED]
+master1/22623 [OK]
+master2/6443 [FAILED]
+master2/22623 [OK]
+
+Apps LB VIP Test
+===
+worker0/80 [OK]
+worker0/443 [OK]
+worker1/80 [OK]
+worker1/443 [OK]
+
+SSL Passthrough Test on Masters LB VIP
+=== 
+bootstrap/6443 [OK]
+bootstrap/22623 [OK]
+master0/6443 [OK]
+master0/22623 [OK]
+master1/6443 [FAILED]
+master1/22623 [OK]
+master2/6443 [FAILED]
+master2/22623 [OK]
+
+SSL Passthrough Test on Apps LB VIP
+===
+worker0/443 [OK]
+worker1/443 [OK]
+
+Raw Dump
+===
+LB Check:
+[
+  {
+    "content": "This is bootstrap.ocp.ltsai.com/192.168.100.150",
+    "failed": false,
+    "inventory_hostname": "bootstrap",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443
+  },
+  {
+    "content": "This is bootstrap.ocp.ltsai.com/192.168.100.150",
+    "failed": false,
+    "inventory_hostname": "bootstrap",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623
+  },
+  {
+    "content": "This is master0.ocp.ltsai.com/192.168.100.151",
+    "failed": false,
+    "inventory_hostname": "master0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443
+  },
+  {
+    "content": "This is master0.ocp.ltsai.com/192.168.100.151",
+    "failed": false,
+    "inventory_hostname": "master0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623
+  },
+  {
+    "content": "",
+    "failed": true,
+    "inventory_hostname": "master1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443
+  },
+  {
+    "content": "This is master1.ocp.ltsai.com/192.168.100.152",
+    "failed": false,
+    "inventory_hostname": "master1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623
+  },
+  {
+    "content": "",
+    "failed": true,
+    "inventory_hostname": "master2",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443
+  },
+  {
+    "content": "This is master2.ocp.ltsai.com/192.168.100.153",
+    "failed": false,
+    "inventory_hostname": "master2",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623
+  },
+  {
+    "content": "This is worker0.ocp.ltsai.com/192.168.100.154",
+    "failed": false,
+    "inventory_hostname": "worker0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "apps",
+    "port": 80
+  },
+  {
+    "content": "This is worker0.ocp.ltsai.com/192.168.100.154",
+    "failed": false,
+    "inventory_hostname": "worker0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "apps",
+    "port": 443
+  },
+  {
+    "content": "This is worker1.ocp.ltsai.com/192.168.100.155",
+    "failed": false,
+    "inventory_hostname": "worker1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "apps",
+    "port": 80
+  },
+  {
+    "content": "This is worker1.ocp.ltsai.com/192.168.100.155",
+    "failed": false,
+    "inventory_hostname": "worker1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "apps",
+    "port": 443
+  }
+]
+
+Cert Check:
+[
+  {
+    "failed": false,
+    "inventory_hostname": "bootstrap",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443,
+    "subject_cn": "bootstrap.ocp.ltsai.com"
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "bootstrap",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623,
+    "subject_cn": "bootstrap.ocp.ltsai.com"
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "master0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443,
+    "subject_cn": "master0.ocp.ltsai.com"
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "master0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623,
+    "subject_cn": "master0.ocp.ltsai.com"
+  },
+  {
+    "failed": true,
+    "inventory_hostname": "master1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443,
+    "subject_cn": ""
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "master1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623,
+    "subject_cn": "master1.ocp.ltsai.com"
+  },
+  {
+    "failed": true,
+    "inventory_hostname": "master2",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 6443,
+    "subject_cn": ""
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "master2",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "masters",
+    "port": 22623,
+    "subject_cn": "master2.ocp.ltsai.com"
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "worker0",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "apps",
+    "port": 443,
+    "subject_cn": "worker0.ocp.ltsai.com"
+  },
+  {
+    "failed": false,
+    "inventory_hostname": "worker1",
+    "lb_ip": "192.168.0.230",
+    "lb_name": "apps",
+    "port": 443,
+    "subject_cn": "worker1.ocp.ltsai.com"
+  }
+]
