@@ -180,10 +180,12 @@ all:
     # vcenter_hostname: 
     # vcenter_username: 
     # vcenter_password: 
-
+    # vcenter_validate_cert: false
+    
     # rhv_username: admin@internal
     # rhv_password: system
     # rhv_hostname: 
+    # rhv_valdiate_cert: false
 
     # registry_username: openshift
     # registry_password: password
@@ -194,12 +196,15 @@ all:
     vm_folder: 
     vm_cluster: Default
     vm_network: private
+
+    vm_interface_name: eth0
     vm_netmask: 255.255.255.0
-    vm_gateway:  192.168.100.1
+    # prefix: 24    
+    vm_gateway: 192.168.100.1
     vm_dns:
       - 192.168.0.212
       - 8.8.8.8
-    vcenter_validate_cert: false
+      
     rhel_vm_template: rhel_7_6_w_cloud_user
 
     # Configure this if there is a local Satellite. 
@@ -216,15 +221,7 @@ all:
     #     - rhel-7-server-ansible-2-rpms
     
     # interface_name: ens192
-    vm_interface_name: eth0
-    # vm_netmask: 255.255.255.0
-    # prefix: 24
-    # vm_gateway: 192.168.4.1
-    # vm_dns1: 192.168.4.100
-    # vm_dns2: 8.8.8.8
-    # cluster_id: ocp4
-    # domain: example.com
-    # vm_domain: "{{ cluster_id }}.{{ domain }}"
+   
     # vm_state: poweredon
     # install_dev: sda
     # rhcos_iso_path: "roles/custom_iso/files/rhcos-4.2.0-x86_64-installer.iso"
