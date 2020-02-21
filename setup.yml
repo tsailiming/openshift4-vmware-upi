@@ -35,10 +35,6 @@
         - registry
       loop_control:
         loop_var: outer_item
-      vars:
-        additional_https_ports: 
-          - 6443
-          - 22623
 
 - name: Setup bastion host
   hosts: bastion
