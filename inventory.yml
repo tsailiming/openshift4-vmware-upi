@@ -1,0 +1,235 @@
+all:
+  hosts:
+    
+  children:
+      mirror:
+        hosts:
+          ocp4-registry:
+            ansible_host: 192.168.0.179
+            vm_memory_mb: 1000
+            vm_cpu: 1
+            
+            vm_disks:
+              - size: 20
+                type: thin
+                
+      bastion:
+        hosts:
+          ocp4-bastion:
+            ansible_host: 192.168.100.1
+
+      # LB using haproxy on bastion which is 2 legged. Not same subdomain as OCP.
+      apps_lb:
+        hosts:
+          bastion.ocp.ltsai.com:
+            ansible_host: 192.168.0.230    
+            
+        vars: 
+          lb_type: haproxy
+
+
+      master_lb:
+        hosts:
+          bastion.ocp.ltsai.com:
+            ansible_host: 192.168.0.230    
+            
+        vars:
+          lb_type: haproxy
+         
+      # LB using haproxy on bastion
+      # apps_lb:
+      #   children:
+      #     bastion:
+      #   vars: 
+      #     lb_type: haproxy
+
+      # master_lb:
+      #   children:
+      #     bastion:    
+      #   vars:
+      #     lb_type: haproxy
+                    
+      # External LB (F5, etc). 
+      # Inventory name does not matter since we are not managing it
+      # apps_lb:
+      #   hosts:
+      #     lb1:
+      #       ansible_host: xxx.xxx.xxx.xxx
+      #   vars: 
+      #     lb_type: others
+
+      # master_lb:
+      #   hosts:
+      #     lb2:
+      #       ansible_host: xxx.xxx.xxx.xxx
+      #   vars: 
+      #     lb_type: others
+     
+      infra:
+        children:
+          mirror:
+          bastion: 
+          # master0:
+          #   ansible_host: 192.168.100.151
+          # master1:
+          #   ansible_host: 192.168.100.152
+
+      ocp:
+        children:
+          masters:
+            hosts:
+              bootstrap:            
+                ansible_host: 192.168.100.150
+              master0:
+                ansible_host: 192.168.100.151
+              master1:
+                ansible_host: 192.168.100.152  
+              master2:
+                ansible_host: 192.168.100.153  
+                
+            vars:
+              vm_memory_mb: 2048
+              vm_cpu: 1
+            
+              vm_disks:
+                - size: 20
+                  type: thin
+              
+              ignition_file: master.ign
+        
+          workers:
+            hosts:
+                worker2:
+                  ansible_host: 192.168.100.156
+            vars:
+              vm_memory_mb: 2048
+              vm_cpu: 1
+            
+              vm_disks:
+                - size: 20
+                  type: thin
+              
+              ignition_file: worker.ign
+  
+          infra_routers:
+            hosts:
+              worker0:
+                ansible_host: 192.168.100.154
+              worker1:
+                ansible_host: 192.168.100.155
+            vars:
+              vm_memory_mb: 2048
+              vm_cpu: 1
+            
+              vm_disks:
+                - size: 20
+                  type: thin
+              
+              ignition_file: worker.ign
+          
+          # infra-log-mon:
+          #   hosts:
+          #     infra-logmon1.ocp.example.com:          
+          #     infra-logmon2.ocp.example.com:
+          #     infra-logmon3.ocp.example.com:
+          
+  vars:
+    cluster_name: ocp
+    base_domain: ltsai.com
+    dns_domain:  "{{cluster_name + '.' + base_domain}}"
+
+    apps_use_wildcard_dns: yes
+    
+    # Common path. Default in role
+    pip_path: /root/repos/pip
+    registry_image_tar_path: /root/repos/registry.tar
+    registry_data_tar_path: /root/repos/registry_data.tar.gz
+
+    # If necessary, configure the local yum repo. 
+    # EPEL repo contains only the python2-pip rpm. 
+    yum_repos:
+      - name: rhel-7-server-ansible-2-rpms
+        src: /root/repos/rhel-7-server-ansible-2-rpms
+        dest: /var/www/html/repos/rhel-7-server-ansible-2-rpms
+
+      - name: epel
+        src: /root/repos/epel
+        dest: /var/www/html/repos/epel
+      
+    yum_conf:
+      - name: rhel-7-server-ansible-2-rpms
+        baseurl: "{% if inventory_hostname != groups['mirror'][0] %}https://{{http_server}}{% else %}file:///var/www/html/{% endif %}/repos/rhel-7-server-ansible-2-rpms"
+        gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+        sslverify: no
+      
+      - name: epel
+        baseurl: "{% if inventory_hostname != groups['mirror'][0] %}https://{{http_server}}{% else %}file:///var/www/html/{% endif %}/repos/epel/7/x86_64"
+        gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+        sslverify: no
+
+    http_server: "{{ groups['mirror'][0] + dns_domain }}"
+    pip_server: "{{ http_server }}"
+    registry_server: "{{ groups['mirror'][0] + dns_domain }}"
+    
+    timesync_ntp_servers:
+      - hostname: pool.ntp.org
+        iburst: yes
+
+    # This should be in vault.yml
+    ##########
+    # vcenter_hostname: 
+    # vcenter_username: 
+    # vcenter_password: 
+
+    # rhv_username: admin@internal
+    # rhv_password: system
+    # rhv_hostname: 
+
+    # registry_username: openshift
+    # registry_password: password
+    # ##########
+
+    vm_datastore: b05-data
+    vm_datacenter: 
+    vm_folder: 
+    vm_cluster: Default
+    vm_network: private
+    vm_netmask: 255.255.255.0
+    vm_gateway:  192.168.100.1
+    vm_dns:
+      - 192.168.0.212
+      - 8.8.8.8
+    vcenter_validate_cert: false
+    rhel_vm_template: rhel_7_6_w_cloud_user
+
+    # Configure this if there is a local Satellite. 
+    # https://github.com/oasis-roles/rhsm
+    # rhsm_org_id: IT
+    # rhsm_activationkey: rhel-7Server
+    # rhsm_server_hostname: sat6.lab.ltsai.com
+    # rhsm_repositories:
+    #   disabled:
+    #     - '*'
+    #   enabled:
+    #     - rhel-7-server-rpms
+    #     - rhel-7-server-extras-rpms
+    #     - rhel-7-server-ansible-2-rpms
+    
+    # interface_name: ens192
+    vm_interface_name: eth0
+    # vm_netmask: 255.255.255.0
+    # prefix: 24
+    # vm_gateway: 192.168.4.1
+    # vm_dns1: 192.168.4.100
+    # vm_dns2: 8.8.8.8
+    # cluster_id: ocp4
+    # domain: example.com
+    # vm_domain: "{{ cluster_id }}.{{ domain }}"
+    # vm_state: poweredon
+    # install_dev: sda
+    # rhcos_iso_path: "roles/custom_iso/files/rhcos-4.2.0-x86_64-installer.iso"
+    # image_url: "http://{{ httpd_server }}/install/rhcos-4.2.0-x86_64-metal.raw.gz"
+    # ignition_url: "http://{{ httpd_server }}/ignition/{{ hostvars[item]['original_ignition_file'] }}"
+
+
+

@@ -1,0 +1,46 @@
+Validated on {{ now(fmt='%Y-%m-%d %H:%M:%S') }}
+
+LB VIP 
+===
+Masters LB IP = {{masters_lb_ip}}
+APPS LB IP = {{apps_lb_ip}}
+
+Masters LB VIP Test
+===
+{% for item in lb_check_results %}
+{% if item.lb_name == 'masters' %}
+{{ item.inventory_hostname }}/{{item.port}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endif %}
+{% endfor %}
+
+Apps LB VIP Test
+===
+{% for item in lb_check_results %}
+{% if item.lb_name == 'apps' %}
+{{ item.inventory_hostname }}/{{item.port}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endif %}
+{% endfor %}
+
+SSL Passthrough Test on Masters LB VIP
+=== 
+{% for item in lb_cert_check_results %}
+{% if item.lb_name == 'masters' %}
+{{ item.inventory_hostname }}/{{item.port}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endif %}
+{% endfor %}
+
+SSL Passthrough Test on Apps LB VIP
+===
+{% for item in lb_cert_check_results %}
+{% if item.lb_name == 'apps' %}
+{{ item.inventory_hostname }}/{{item.port}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endif %}
+{% endfor %}
+
+Raw Dump
+===
+LB Check:
+{{lb_check_results | to_nice_json(indent=2)}}
+
+Cert Check:
+{{lb_cert_check_results | to_nice_json(indent=2)}}

@@ -1,0 +1,3 @@
+---
+# defaults file for pip_repo
+pip_path: /root/repos/pip

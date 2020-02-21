@@ -1,0 +1,13 @@
+---
+# vars file for dns_check
+static_routes:
+  - oauth-openshift
+  - console-openshift-console
+  - downloads-openshift-console
+  - default-route-openshift-image-registry
+  - kibana-openshift-logging
+  - alertmanager-main-openshift-monitoring
+  - grafana-openshift-monitoring
+  - prometheus-k8s-openshift-monitoring
+  - thanos-querier-openshift-monitoring
+  - terminal-terminal

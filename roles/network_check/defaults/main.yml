@@ -1,0 +1,9 @@
+---
+# defaults file for dns_check
+apps_use_wildcard_dns: yes
+vcenter_insecure_ssl: yes
+
+additional_routes: []
+  #- hello-openshift
+
+

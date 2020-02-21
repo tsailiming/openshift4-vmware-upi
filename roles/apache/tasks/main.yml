@@ -1,0 +1,45 @@
+---
+# tasks file for apache_install
+- name: Install apache
+  yum:
+    name: "{{item}}"
+    state: latest
+  loop:
+    - httpd
+    - mod_ssl
+
+- name: Create index.html file
+  template:
+    src: index_html.j2
+    dest: /var/www/html/index.html
+    mode: 0644
+
+- name: Configure apache ssl config file
+  template:
+    src: ssl.conf.j2
+    dest: /etc/httpd/conf.d/ssl.conf
+    mode: '0644'
+  notify:
+    - restart apache
+
+- name: Open up firewall
+  firewalld:
+    port: "{{item}}/tcp"
+    permanent: yes
+    state: enabled
+    immediate: yes
+  loop: "{{[80, 443] + additional_https_ports}}"
+
+- name: Allow Apache to listen on tcp port 
+  seport:
+    ports: "{{item}}"
+    proto: tcp
+    setype: http_port_t
+    state: present
+  loop: "{{additional_https_ports}}"
+
+- name: Enable httpd service
+  service:
+    name: httpd
+    enabled: yes
+

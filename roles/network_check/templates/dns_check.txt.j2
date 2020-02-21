@@ -1,0 +1,56 @@
+Validated on {{ now(fmt='%Y-%m-%d %H:%M:%S') }}
+
+Using /etc/resolv.conf:
+{{lookup('file', '/etc/resolv.conf')}}
+
+DNS Records
+===
+{% for item in check_server_ips_results.results %}
+{{item.item.inventory_name + '.' + dns_domain }}/{{hostvars[item.item.inventory_name]['ansible_host']}} == {{item.item.ip}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endfor %}
+
+LB VIP 
+===
+Masters LB IP = {{hostvars[groups['master_lb'][0]]['ansible_host']}} 
+APPS LB IP = {{hostvars[groups['apps_lb'][0]]['ansible_host']}} 
+
+{% for item in check_api_ips_results.results %}
+{{item.item.name + '.' + dns_domain }} == {{item.item.ip}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endfor %}
+{% if check_apps_wildcard_ip_result.failed is defined %}
+{{'*.apps' + '.' + dns_domain}} == {{hostvars[groups['apps_lb'][0]]['ansible_host']}} [{{'FAILED' if check_apps_wildcard_ip_result.failed else 'OK'}}]
+{% endif %}
+
+Routes 
+===
+{% for item in check_routes_ip_results.results %}
+{{item.item + '.apps.' + dns_domain }} == {{hostvars[groups['master_lb'][0]]['ansible_host']}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endfor %}
+
+etcd
+===
+{% for item in etcd_servers_exists_results.results %}
+{{item.item}} [{{'FAILED' if item.failed else 'OK'}}]
+{% endfor %}
+
+Validate etcd count matches masters count [{{'FAILED' if etcd_server_count_result.failed else 'OK'}}]
+Validate etcd ips matches to masters' [{{'FAILED' if etcd_match_master_results.failed else 'OK'}}]
+
+Raw Dump
+===
+Server IPs:
+{{check_server_ips_results.results | to_nice_json(indent=2)}}
+
+API IPs:
+{{check_api_ips_results.results | to_nice_json(indent=2)}}
+
+{% if check_apps_wildcard_ip_result.failed is defined %}
+Wildcard IP:
+{{check_apps_wildcard_ip_result | to_nice_json(indent=2)}}
+{% endif %}
+
+Routes:
+{{check_routes_ip_results.results | to_nice_json(indent=2)}}
+
+etcd:
+{{etcd_servers_exists_results.results | to_nice_json(indent=2)}}

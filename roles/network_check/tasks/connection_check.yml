@@ -1,0 +1,32 @@
+---
+- name: Check connectivity to VMware vCenter
+  wait_for:
+    host: "{{ vcenter_hostname }}"
+    port: 443
+    state: started         # Port should be open
+    delay: 0               # No wait before first check (sec)
+    timeout: 5             # Stop checking after timeout (sec)
+
+- name: Test login to VMware vCenter
+  command: govc about
+  environment:
+    GOVC_URL: "https://{{ vcenter_hostname }}/sdk"
+    GOVC_USERNAME: "{{ vcenter_username }}"
+    GOVC_PASSWORD: "{{ vcenter_password }}"
+    GOVC_INSECURE: "{{ vcenter_insecure_ssl }}"
+
+- set_fact:
+    lbs: "{{ lbs | default([]) + [ {'ansible_host': hostvars[groups[item.name][0]].ansible_host, 'ports': item.ports} ] }}"
+  loop:
+    - {name: apps_lb, ports: [80, 443]}
+    - {name: master_lb, ports: [6443, 22623]}
+    
+- name: Test connectivity to load balancer
+  wait_for:
+    host: "{{ item.0.ansible_host }}"
+    port: "{{ item.1 }}"
+    state: started         # Port should be open
+    delay: 0               # No wait before first check (sec)
+    timeout: 5             # Stop checking after timeout (sec)
+  loop: "{{ lbs | subelements('ports') }}"
+

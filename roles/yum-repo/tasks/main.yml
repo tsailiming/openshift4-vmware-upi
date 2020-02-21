@@ -1,0 +1,21 @@
+---
+# tasks file for yum-repo
+- name: Ensure yum repo path exists
+  file:
+    path: "/var/www/html/repos/"
+    state: directory
+    mode: '0755'
+
+- name: Copy repos to destination
+  synchronize:
+    src: "{{ item.src }}/" 
+    dest: "{{ item.dest }}"
+    recursive: yes
+  loop: "{{ yum_repos }}"
+  
+# restorecon /var/www/httpd
+- name: restorecon repos directory
+  command: restorecon -vR {{ item.dest }}
+  loop: "{{ yum_repos }} "
+
+

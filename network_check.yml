@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  become: no
+  gather_facts: no
+
+  roles:
+    - network_check
+      

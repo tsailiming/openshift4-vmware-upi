@@ -1,0 +1,4 @@
+---
+# defaults file for katello_ca_consumer
+rhsm_username: "{{ omit }}"
+rhsm_activationkey: "{{ omit }}"

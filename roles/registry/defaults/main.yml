@@ -1,0 +1,10 @@
+---
+# defaults file for registry
+registry_server: registry.example.com
+pip_server: pip.example.com
+
+registry_username: openshift
+registry_password: password
+
+registry_image_tar_path: /root/repos/registry.tar
+registry_data_tar_path: /root/repos/registry_data.tar.gz

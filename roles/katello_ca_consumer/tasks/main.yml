@@ -1,0 +1,9 @@
+---
+# tasks file for katello_ca_consumer
+- name: Install katello-ca-consumer rpm
+  yum:
+    name: "https://{{ rhsm_server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm"
+    state: present
+    validate_certs: no
+    disable_gpg_check: yes
+  when: rhsm_username != omit or rhsm_activationkey != omit

@@ -1,0 +1,108 @@
+---
+# tasks file for dns_check
+- name: Get all master IPs from inventory
+  set_fact:
+    master_ips: "{{ hostvars | to_json | from_json | json_query(query) | sort }}"
+  vars:
+    query: "values(@)[?contains(inventory_hostname_short, 'master')].ansible_host"
+
+- name: Get A records for servers
+  set_fact: 
+    server_ips: "{{ server_ips | default([]) + [{'inventory_name': item, 'ip': lookup('dig', item + '.' + dns_domain + '.', 'qtype=A')}] }}"
+  loop: "{{ groups['all'] | sort }}"
+  when: item not in groups['master_lb'] + groups['apps_lb']
+
+- name: Get api A records
+  set_fact: 
+    api_ips: "{{ api_ips | default([]) + [{'name': item, 'ip': lookup('dig', item + '.' + dns_domain + '.', 'qtype=A')}] }}"
+  loop:
+    - api
+    - api-int
+
+- name: Get apps wildcard A record
+  set_fact:
+    apps_wildcard_ip:  "{{ {'name': '*.apps', 'ip': lookup('dig', '*.apps' + '.' + dns_domain + '.', 'qtype=A')} }}"
+  when: apps_use_wildcard_dns
+
+- name: Get etcd SRV record
+  set_fact:
+   etcd_srv_record:  "{{ lookup('dig', '_etcd-server-ssl._tcp' + '.' + dns_domain + '.', 'qtype=SRV').split(',') | sort }}"
+
+- name: Get etcd IP
+  set_fact:
+    etcd_ips: "{{ etcd_ips | default([]) + [lookup('dig', item.split()[-1])] }}"
+  loop: "{{etcd_srv_record}}"
+
+- set_fact:
+    etcd_length: "{{ etcd_srv_record | length }}"
+    master_length: "{{ groups['masters'] | select('search','master') | list | length  }}"
+
+- block:
+  - name: Validate A records for servers
+    assert: 
+      that:
+        - hostvars[item.inventory_name]['ansible_host'] == item.ip
+    loop: "{{server_ips}}"
+    register: check_server_ips_results
+    
+  - name: Validate api A record
+    assert: 
+      that:
+        - hostvars[groups['master_lb'][0]]['ansible_host'] == item.ip
+    loop: "{{api_ips}}"
+    register: check_api_ips_results
+    
+  - name: Validate apps wildcard A record
+    assert: 
+      that:
+        - hostvars[groups['apps_lb'][0]]['ansible_host'] == apps_wildcard_ip.ip
+    register: check_apps_wildcard_ip_result
+    when: apps_use_wildcard_dns
+    
+  - name: Validate routes
+    assert:
+      that: 
+        - lookup('dig', item + '.apps' + '.' + dns_domain + '.', 'qtype=A') == hostvars[groups['apps_lb'][0]]['ansible_host']
+    loop: "{{ static_routes + additional_routes}} " 
+    register: check_routes_ip_results
+
+  - name: Validate etcd count in SRV matches master count
+    assert:
+      that: 
+        - etcd_length == master_length
+    register: etcd_server_count_result
+
+  - name: Validate etcd name in SRV records
+    assert: 
+      that:
+        - item == '0 10 2380 etcd-' + index | string + '.' + dns_domain + '.'
+    loop: "{{etcd_srv_record}}"
+    loop_control:
+      index_var: index
+    register: etcd_servers_exists_results
+
+  - name: Validate etcd ips matches to masters'
+    assert:
+      that:  etcd_ips == master_ips
+    register: etcd_match_master_results
+
+  ignore_errors: yes
+
+- template:
+    src: dns_check.txt.j2
+    dest: /tmp/dns_check.txt
+
+- name: Check if any validation failed
+  fail:
+    msg: DNS validation failed. Check /tmp/dns_check.txt
+  when: item.results.failed is defined and item.results.failed
+  loop:
+    - { name: 'check_server_ips_results', results: "{{check_server_ips_results}}" }
+    - { name: 'check_api_ips_results', results: "{{check_api_ips_results}}" }
+    - { name: 'check_apps_wildcard_ip_result', results: "{{check_apps_wildcard_ip_result}}" }
+    - { name: 'check_routes_ip_results', results: "{{check_routes_ip_results}}" }
+    - { name: 'etcd_server_count_result', results: "{{etcd_server_count_result}}" }
+    - { name: 'etcd_servers_exists_results', results: "{{etcd_servers_exists_results}}" }
+    - { name: 'etcd_match_master_results', results: "{{etcd_match_master_results}}" }
+  loop_control:
+    label: "{{ item.name }}"

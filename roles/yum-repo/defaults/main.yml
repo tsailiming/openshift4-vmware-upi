@@ -1,0 +1,9 @@
+---
+# defaults file for yum-repo
+yum_repos:
+  - name: rhel-7-server-ansible-2-rpms
+    src: /root/repos/rhel-7-server-ansible-2-rpms
+    dest: /var/www/html/repos/rhel-7-server-ansible-2-rpms
+  
+
+  #- /root/repos/rhel-7-extras

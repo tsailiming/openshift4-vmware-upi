@@ -1,0 +1,134 @@
+---
+# tasks file for registry
+- name: Install required packages
+  yum:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - podman
+    - httpd-tools
+    - python2-pip
+    - tar 
+
+- name: pip install 
+  pip:
+    name: "{{ item }}"
+    extra_args: "--index-url https://{{pip_server}}/repos/pip  --trusted-host {{pip_server}}" 
+  loop:
+    - cryptography
+    - passlib
+    - bcrypt
+
+- name: Make registry directories
+  file:
+    path: "/opt/registry/{{item}}"
+    state: directory
+    mode: '0755'
+  loop:
+    - auth
+    - certs
+    - data
+
+- name: Check for registry cert existence
+  stat:
+    path: /opt/registry/certs/domain.crt
+  register: cert
+
+# openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -out domain.crt  
+- name: Generate private key
+  openssl_privatekey:
+    path: /opt/registry/certs/domain.key
+    size: 4096
+    type: RSA
+  when: not cert.stat.exists
+
+- name: Generate csr
+  openssl_csr:
+    path: /opt/registry/certs/domain.csr
+    privatekey_path: /opt/registry/certs/domain.key
+    common_name: "{{ansible_fqdn}}"
+  when: not cert.stat.exists
+
+- name: Generate self-signed certificate
+  openssl_certificate:
+    path: /opt/registry/certs/domain.crt
+    privatekey_path: /opt/registry/certs/domain.key
+    csr_path: /opt/registry/certs/domain.csr
+    selfsigned_digest: sha256
+    provider: selfsigned
+  when: not cert.stat.exists
+
+- name: Copy cert to ca-trust
+  copy:
+    src: /opt/registry/certs/domain.crt 
+    dest: /etc/pki/ca-trust/source/anchors/
+    remote_src: yes
+  when: not cert.stat.exists
+
+- name: update ca-trust
+  command: update-ca-trust
+  when: not cert.stat.exists
+
+- name: Check for registry password existence
+  stat:
+    path: /opt/registry/auth/htpasswd
+  register: passwd
+
+# htpasswd -bBc /opt/registry/auth/htpasswd <user_name> <password> 
+- name: Create htpasswd
+  htpasswd:
+    path: /opt/registry/auth/htpasswd
+    name: "{{ registry_username }}"
+    password: "{{ registry_password }}"
+    crypt_scheme: bcrypt
+    owner: root
+    group: root
+    mode: 0644
+  when: not passwd.stat.exists
+
+- name: Copy registry image
+  copy:
+    src: "{{registry_image_tar_path}}"
+    dest: "/tmp/{{registry_image_tar_path | basename}}"
+
+- name: Import registry container image
+  command: podman image load -i "/tmp/{{registry_image_tar_path | basename}}"
+
+- name: Unarchive registry data to /opt/registry/data
+  unarchive:
+    src: "{{registry_data_tar_path}}"
+    dest: /opt/registry/data
+    owner: root
+    mode: 0644
+    
+- name: Install registry sevice file
+  copy:
+    src: ocp4-registry.service
+    dest: /etc/systemd/system/ocp4-registry.service
+
+- name: Open up firewall
+  firewalld:
+    port: 5000/tcp
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+- name: Enable and start registry
+  systemd:
+    name: ocp4-registry
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+
+- name: Test registry uri
+  uri:
+    url: https://{{registry_server}}:5000/v2/_catalog
+    user: "{{ registry_username }}"
+    password: "{{ registry_password }}"
+    status_code: 200
+    body_format: json
+    validate_certs: no
+  register: result
+  failed_when: result.json.repositories is not defined
+  delegate_to: localhost
+

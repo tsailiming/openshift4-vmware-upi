@@ -1,0 +1,7 @@
+---
+# defaults file for common
+timesync_ntp_servers:
+  - hostname: pool.ntp.org
+    iburst: yes
+
+

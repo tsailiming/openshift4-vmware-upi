@@ -1,0 +1,58 @@
+---
+- block:
+  - name: "{{outer_item}} | Test {{lb_name}} LB VIP"
+    uri:
+      url: "{% if item == 80 %}http{% else %}https{% endif %}://{{ lb_ip }}:{{ item }}"
+      validate_certs: no
+      return_content: yes
+    loop: "{{ports}}"
+    loop_control:
+      label: "https://{{ lb_ip }}:{{ item }}"
+    register: lb_result
+    
+  - name: "{{ outer_item }} | Validate {{lb_name}} LB result"
+    assert:
+      that:
+        - "outer_item in item.content"
+      quiet: yes
+    loop: "{{lb_result.results}}"
+    loop_control:
+      label: "{{item.url}}"
+    register: lb_check_result
+
+  - name: "{{outer_item}} | set fact {{lb_name}} LB validate result"
+    set_fact:
+      lb_check_results: "{{ lb_check_results | default([]) + [{'inventory_hostname': outer_item, 'failed': item.failed, 'content': item.item.content, 'lb_ip': lb_ip, 'lb_name': lb_name, 'port': item.item.item}]}}"
+    loop: "{{lb_check_result.results}}"
+    loop_control:
+      label: "{{item.item.url}}"
+
+  - name: "{{outer_item}} | Get {{lb_name}} LB VIP certificate"
+    get_certificate:
+      host: "{{ lb_ip }}"
+      port: "{{item}}"
+    loop: "{{ports}}"
+    when: item != 80
+    register: lb_cert
+
+  - name: "{{outer_item}} | Validate {{lb_name}} LB VIP certificate"
+    assert:
+      that:
+        - not item.failed 
+        - "item.subject.CN == outer_item + '.' + dns_domain"
+      quiet: yes
+    loop: "{{lb_cert.results}}"
+    loop_control:
+      label: "https://{{ lb_ip }}:{{ item.item }}"
+    register: lb_cert_check_result
+    when: item.skipped is not defined 
+        
+  - name: "{{outer_item}} | set fact {{lb_name}} LB VIP certificate validate result"
+    set_fact:
+      lb_cert_check_results: "{{ lb_cert_check_results | default([]) + [{'inventory_hostname': outer_item, 'failed': item.failed | default(true), 'subject_cn': item.item.subject.CN | default(''), 'lb_ip': lb_ip, 'lb_name': lb_name, 'port': item.item.item}]}}"
+    loop: "{{lb_cert_check_result.results}}"
+    loop_control:
+      label: "{{lb_ip + ':' + item.item.item | string}}"
+    when: item.failed is defined
+
+  ignore_errors: yes

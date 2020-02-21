@@ -1,0 +1,12 @@
+---
+- name: Get all OCP IPs from inventory
+  set_fact:
+    ocp_host_ips: "{{ groups['ocp'] | map('extract', hostvars, 'ansible_host') | select('defined') | unique | list }}"
+
+- name: Validate unique/missing ips in OCP
+  assert:
+    that:
+      - ocp_host_ips | length == groups['ocp'] | length
+
+- include_tasks: dns_check.yml
+- include_tasks: connection_check.yml

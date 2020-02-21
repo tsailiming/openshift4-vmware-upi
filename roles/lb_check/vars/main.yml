@@ -1,0 +1,4 @@
+---
+# vars file for lb_check
+masters_lb_ip: "{{ hostvars[groups['master_lb'][0]]['ansible_host'] }}"
+apps_lb_ip: "{{ hostvars[groups['apps_lb'][0]]['ansible_host'] }}"

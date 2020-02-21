@@ -1,0 +1,23 @@
+---
+# tasks file for common
+- name: Install packages
+  yum:
+    name: "{{item}}"
+    state: latest
+  loop: "{{ packages }}"
+    
+- name: Enable firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+    
+- name: Enable ssh in firewall
+  firewalld:
+    permanent: yes
+    state: enabled
+    immediate: yes
+
+- name: Configure chrony
+  include_role:
+    name: rhel-system-roles.timesync

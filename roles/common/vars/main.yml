@@ -1,0 +1,11 @@
+---
+# vars file for common
+packages:
+  - firewalld
+  - net-tools
+  - vim-enhanced
+  - curl
+  - telnet
+  - bind-utils
+
+timesync_ntp_provider: chrony

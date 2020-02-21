@@ -1,0 +1,8 @@
+---
+vm_disk_type: thin
+vm_datastore: datastore_name
+vm_datacenter: datacenter
+vm_folder: folder
+vcenter_validate_cert: false
+
+vm_hardware_version: 13

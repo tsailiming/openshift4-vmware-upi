@@ -1,0 +1,36 @@
+---
+# tasks file for lb_check
+- name: "{{outer_item}} | Power on VM"
+  ovirt_vm:
+    auth: "{{ ovirt_auth }}"
+    state: running
+    name: "{{ outer_item }}"
+
+- name: "{{outer_item}} | Wait for Apache is up"
+  wait_for:
+    port: 80
+    delay: 10 # Delay on LB backend timeout and OS/apache startup
+    timeout: 200
+    host: "{{ outer_item + '.' + dns_domain }}"
+
+- name: "Running check for {{ outer_item }} for masters LB VIP"
+  include_tasks: tasks/check.yml
+  vars:
+    lb_name: "masters"
+    lb_ip: "{{masters_lb_ip}}"
+    ports: "{{master_lb_ports}}"
+  when: outer_item in groups['masters']
+
+- name: "Running check for {{ outer_item }} for apps LB VIP"
+  include_tasks: tasks/check.yml
+  vars:
+    lb_name: "apps"
+    lb_ip: "{{apps_lb_ip}}"
+    ports: "{{apps_lb_ports}}"
+  when: outer_item in groups['infra_routers']
+
+- name: "{{outer_item}} | Power off VM"
+  ovirt_vm:
+    auth: "{{ ovirt_auth }}"
+    state: stopped
+    name: "{{ outer_item }}"

@@ -1,0 +1,41 @@
+---
+- name: Destroy OCP vms 
+  hosts: masters, infra_routers
+  become: yes
+  gather_facts: no
+
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - name: Include VMware variables
+      include_vars: rhel_vmware.yml
+      when: vcenter_hostname | default()
+
+    - name: Include RHV variables
+      include_vars: rhel_rhv.yml
+      when: rhv_hostname | default()
+      
+    - block:    
+      - name: Authenticate to oVirt
+        ovirt_auth:
+          username: "{{ rhv_username }}"
+          password: "{{ rhv_password }}"
+          url: "https://{{ rhv_hostname }}/ovirt-engine/api"
+          insecure: True
+
+      - name: Destroy virtual machine
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          state: absent
+          name: "{{ inventory_hostname }}"
+      
+      - name: Revoke the SSO token
+        ovirt_auth:
+          state: absent
+          ovirt_auth: "{{ ovirt_auth }}"
+          
+      delegate_to: localhost
+      when: rhv_hostname | default()
+      
+      
