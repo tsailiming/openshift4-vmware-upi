@@ -1,0 +1,58 @@
+---
+# tasks file to create custom ISO for each OCP node
+- name: Create a temporary RHCOS ISO mount directory
+  tempfile:
+    state: directory
+    suffix: rhcosiso
+  register: iso_mount_path
+
+# https://github.com/ansible/ansible/issues/48134. 
+# Mount module adds to /etc/fstab    
+- name: Mount RHCOS ISO
+  command: "mount -o ro,loop {{ rhcos_installer_iso }} {{iso_mount_path.path}}"
+  args:
+    warn: false 
+
+- name: Create a temporary ISO build directory
+  tempfile:
+    state: directory
+    suffix: rhcosbuild
+  register: tempfile
+
+- name: Temporary iso build directory
+  debug:
+    var: tempfile.path
+
+- name: Set fact for host_iso_build_path
+  set_fact:
+    host_iso_build_path: "{{tempfile.path}}/src" 
+
+- name: "Create {{host_iso_build_path}} for custom RHCOS ISO files"
+  file:
+    path: "{{host_iso_build_path}}" 
+    state: directory
+  
+- name: "Extract RHCOS ISO to {{host_iso_build_path}}"
+  copy:
+    src: "{{iso_mount_path.path}}/" # Trailing /. Copy content inside dir
+    dest: "{{host_iso_build_path}}"
+  
+- block:
+  - name: Generate boot ISO
+    include_tasks: gen_iso.yml
+    loop: "{{ groups['ocp'] | sort }}"
+    loop_control:
+      loop_var: outer_item
+
+  always:
+    - name: Unmount RHCOS ISO file
+      mount:
+        path: "{{iso_mount_path.path}}"
+        state: unmounted #If unmounted, the device will be unmounted without changing fstab.
+
+    - name: Delete iso mount path
+      file:
+        path: "{{iso_mount_path}}"
+        state: absent
+
+

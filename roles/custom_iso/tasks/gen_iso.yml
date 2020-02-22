@@ -1,0 +1,36 @@
+---
+- name: "{{outer_item}} | Set fact"
+  set_fact:
+    iso_file: "{{tempfile.path}}/{{outer_item}}.iso"
+  
+- name: "{{outer_item}} | Modify boot entry"
+  template:
+    src: isolinux.cfg.j2
+    dest: "{{host_iso_build_path}}/isolinux/isolinux.cfg" 
+  vars:
+    vm_ip: "{{hostvars[outer_item].ansible_host}}"
+    vm_name: "{{outer_item}}"
+    ignition_file: "{{hostvars[outer_item].ignition_file}}"
+
+# https://shanna-chan.blog/2019/07/26/openshift4-vsphere-static-ip/
+- name: "{{outer_item}} | Create new RHCOS ISO "
+  command: "mkisofs {{mkisofs_opts}}"
+  args:
+    chdir: "{{host_iso_build_path}}"
+  vars:
+    output_iso_path: "{{iso_file}}"
+    name: "{{outer_item}}"      
+  register: output
+
+# - debug:
+#     var: output
+
+  # - name: Upload ISO to VMware datastore
+  #   vsphere_copy:
+  #     hostname: '{{ vcenter_hostname }}'
+  #     username: '{{ vcenter_username }}'
+  #     password: '{{ vcenter_password }}'
+  #     src: "{{iso_file}}"
+  #     datacenter: "{{vm_iso_datacenter}}"
+  #     datastore: "{{vm_iso_datastore}}"
+  #     path: "{{ iso_remote_path }}"  

@@ -2,6 +2,7 @@ all:
   hosts:
     
   children:
+      # Specify only 1 server in mirror group
       mirror:
         hosts:
           ocp4-registry:
@@ -12,7 +13,8 @@ all:
             vm_disks:
               - size: 20
                 type: thin
-                
+      # Specify only 1 server in bastion group. 
+      # Bastion is the host where the playbook is running. 
       bastion:
         hosts:
           ocp4-bastion:
@@ -26,7 +28,6 @@ all:
             
         vars: 
           lb_type: haproxy
-
 
       master_lb:
         hosts:
@@ -69,10 +70,6 @@ all:
         children:
           mirror:
           bastion: 
-          # master0:
-          #   ansible_host: 192.168.100.151
-          # master1:
-          #   ansible_host: 192.168.100.152
 
       ocp:
         children:
@@ -80,13 +77,17 @@ all:
             hosts:
               bootstrap:            
                 ansible_host: 192.168.100.150
+                ignition_file: bootstrap.ign
               master0:
                 ansible_host: 192.168.100.151
+                ignition_file: master.ign
               master1:
                 ansible_host: 192.168.100.152  
+                ignition_file: master.ign
               master2:
                 ansible_host: 192.168.100.153  
-                
+                ignition_file: master.ign
+
             vars:
               vm_memory_mb: 2048
               vm_cpu: 1
@@ -95,8 +96,6 @@ all:
                 - size: 20
                   type: thin
               
-              ignition_file: master.ign
-        
           workers:
             hosts:
                 worker2:
@@ -144,7 +143,9 @@ all:
     pip_path: /root/repos/pip
     registry_image_tar_path: /root/repos/registry.tar
     registry_data_tar_path: /root/repos/registry_data.tar.gz
-
+    rhcos_image_path: /root/repos/rhcos-4.2.0-x86_64-metal-bios.raw.gz
+    rhcos_installer_iso: /root/repos/rhcos-4.2.0-x86_64-installer.iso
+    
     # If necessary, configure the local yum repo. 
     # EPEL repo contains only the python2-pip rpm. 
     yum_repos:
@@ -167,10 +168,10 @@ all:
         gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
         sslverify: no
 
-    http_server: "{{ groups['mirror'][0] + dns_domain }}"
+    http_server: "{{ groups['mirror'][0] + '.' + dns_domain }}"
     pip_server: "{{ http_server }}"
-    registry_server: "{{ groups['mirror'][0] + dns_domain }}"
-    
+    registry_server: "{{ groups['mirror'][0] + '.' + dns_domain }}"
+
     timesync_ntp_servers:
       - hostname: pool.ntp.org
         iburst: yes
@@ -204,7 +205,8 @@ all:
     vm_dns:
       - 192.168.0.212
       - 8.8.8.8
-      
+    vm_install_dev: sda
+
     rhel_vm_template: rhel_7_6_w_cloud_user
 
     # Configure this if there is a local Satellite. 
@@ -220,13 +222,3 @@ all:
     #     - rhel-7-server-extras-rpms
     #     - rhel-7-server-ansible-2-rpms
     
-    # interface_name: ens192
-   
-    # vm_state: poweredon
-    # install_dev: sda
-    # rhcos_iso_path: "roles/custom_iso/files/rhcos-4.2.0-x86_64-installer.iso"
-    # image_url: "http://{{ httpd_server }}/install/rhcos-4.2.0-x86_64-metal.raw.gz"
-    # ignition_url: "http://{{ httpd_server }}/ignition/{{ hostvars[item]['original_ignition_file'] }}"
-
-
-

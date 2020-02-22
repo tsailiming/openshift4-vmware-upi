@@ -50,6 +50,12 @@
       loop_control:
         loop_var: outer_item
 
+    # - role: haproxy
+    #   when: setup_haproxy
+
+    # - role: named
+    #   when: setup_named
+      
     - name: Install more packages for bastion
       yum:
         name: "{{item}}"
@@ -57,6 +63,7 @@
       loop:
         - podman
         - skopeo
+        - genisoimage
 
 - name: Provision vms for LB check
   hosts: masters, infra_routers

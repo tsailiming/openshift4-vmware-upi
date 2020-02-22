@@ -1,0 +1,47 @@
+---
+- name: OpenShift Setup
+  hosts: localhost
+  become: no
+  gather_facts: no
+
+  vars:
+    rhcos_image_dest_path: /var/www/html/install/
+    rhcos_ignition_dest_path: /var/www/html/ignition
+
+  tasks:
+    - name: Ensure /var/www/html/install exists
+      file:
+        path: "{{rhcos_image_dest_path}}"
+        state: directory  
+        owner: root
+        group: root
+        mode: 0644    
+      delegate_to: "{{ groups['mirror'][0] }}"
+
+    - name: Copy RHCOS image to mirror server /var/www/html/install
+      copy:
+        src: "{{rhcos_image_path}}"
+        dest: "{{rhcos_image_dest_path}}"
+      delegate_to: "{{ groups['mirror'][0] }}"
+
+    - name: Create boot iso
+      include_role:
+        name: custom_iso
+      vars:
+        image_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/install/{{rhcos_image_dest_path | basename}}"
+        ignition_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/ignition"
+
+    # - name: xxxx
+    #   include_role:
+    #     name: openshift_installer
+
+# - name: Provision OpenShift VMs
+#   hosts: localhost
+#   become: no
+#   gather_facts: no
+
+#   vars_files:
+#     - vault.yml
+  
+#   tasks:
+#     - debug: msg: ""

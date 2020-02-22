@@ -1,0 +1,16 @@
+---
+rhcos_image_path: /root/repos/rhcos-4.2.0-x86_64-metal.raw.gz
+rhcos_installer_iso: /root/repos/rhcos-4.2.0-x86_64-installer.iso
+
+vm_name: name
+dns_domain: example.com
+vm_ip: 
+vm_gateway: 
+vm_netmask: 
+vm_interface_name: eth0
+vm_dns:
+  - 8.8.8.8
+vm_install_dev: sda
+
+image_url: http://example.com/install/rhcos-4.2.0-x86_64-metal-bios.raw.gz
+ignition_url: http://example.com/ignition
