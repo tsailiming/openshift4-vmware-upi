@@ -6,7 +6,7 @@
     state: directory
     mode: '0755'
 
-- name: Copy repos to destination
+- name: Copy repos to mirror server
   synchronize:
     src: "{{ item.src }}/" 
     dest: "{{ item.dest }}"

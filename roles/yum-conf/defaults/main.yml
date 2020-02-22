@@ -2,6 +2,6 @@
 # defaults file for yum-conf
 yum_conf:
   - name: rhel-7-server-ansible-2-rpms
-    baseurl: http;//example.com/repos/rhel-7-server-ansible-2-rpms
+    baseurl: http://example.com/repos/rhel-7-server-ansible-2-rpms
     gpgkey: /path/to/key
     sslverify: no  
