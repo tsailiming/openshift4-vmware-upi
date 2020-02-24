@@ -1,4 +1,12 @@
 ---
+# - name: Validate OCP CIDR
+#   hosts: localhost
+#   become: no
+#   gather_facts: no
+
+#   tasks:
+#     - 
+
 - name: OpenShift Setup
   hosts: localhost
   become: no
@@ -7,6 +15,9 @@
   vars:
     rhcos_image_dest_path: /var/www/html/install/
     rhcos_ignition_dest_path: /var/www/html/ignition
+
+  vars_files:
+    - vault.yml
 
   tasks:
     - name: Ensure /var/www/html/install exists
@@ -31,10 +42,10 @@
         rhcos_image_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/install/{{rhcos_image_dest_path | basename}}"
         ignition_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/ignition"
 
-    # - name: xxxx
-    #   include_role:
-    #     name: openshift_installer
-
+    - name: Create OCP installer files
+      include_role:
+        name: openshift_installer
+      
 # - name: Provision OpenShift VMs
 #   hosts: localhost
 #   become: no

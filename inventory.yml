@@ -147,7 +147,6 @@ all:
     openshift_cluster_network_cidr: 10.128.0.0/14
     opnehshift_host_prefix: 23
     openshift_service_netowrk_cidr: 172.30.0.0/16
-    openshift_restricted_network: yes
     
     # Common path. Default in role
     pip_path: /root/repos/pip

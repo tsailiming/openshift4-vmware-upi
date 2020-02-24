@@ -1,0 +1,30 @@
+---
+openshift_client_file: /root/repos/openshift-client-linux-4.2.10.tar.gz
+openshift_installer_file: /root/repos/openshift-install-linux-4.2.10.tar.gz
+
+installation_dir: /root/vmware_upi
+
+ssh_key_path: /root/.ssh/id_rsa_openshift
+
+openshift_cluster_network_cidr: 10.128.0.0/14
+opnehshift_host_prefix: 23
+openshift_service_netowrk_cidr: 172.30.0.0/16
+
+use_vcp: false
+vcenter_hostname:
+vcp_username: 
+vcp_password: 
+vcp_datecenter:
+vcp_datastore:
+
+registry_serever: mirror.example.com:5000
+
+# In vault
+###
+#registry_username:
+#registry_password:
+####
+
+registry_path: /ocp4/openshift4
+remote_registry_cert: /etc/pki/ca-trust/source/anchors/domain.crt
+
