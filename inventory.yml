@@ -180,7 +180,7 @@ all:
     http_server: "{{ groups['mirror'][0] + '.' + dns_domain }}"
     pip_server: "{{ http_server }}"
     registry_server: "{{ groups['mirror'][0] + '.' + dns_domain }}:5000"
-    podman_auth_file: /root/podmanauth.json
+    podman_auth_file: /root/.podmanauth.json
     podman_tls_verify: false
 
     timesync_ntp_servers:
