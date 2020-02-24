@@ -40,7 +40,13 @@
   hosts: bastion
   become: yes
 
-- tasks:
+  vars:
+    podman_tls_verify: false
+
+  vars_files:
+      - vault.yml
+
+  tasks:
     - name: Running role
       include_role:
         name: "{{ outer_item }} "
@@ -65,6 +71,20 @@
         - skopeo
         - genisoimage
 
+    - set_fact: 
+        auth_file_content: 
+          auths: '{ "{{ registry_server }}": {"auth": "{{ password_string | b64encode }}"} }' 
+      vars:
+        password_string: "{{registry_username + ':' + registry_password }}"
+
+    - name: "Save credentials to {{podman_auth_file}}"
+      copy:
+        content: "{{auth_file_content | to_nice_json}}"
+        dest: "{{podman_auth_file}}"
+      
+    - name: Podman login to registry
+      command: podman login --authfile {{podman_auth_file}} {{registry_server}} --tls-verify={{podman_tls_verify}}
+      
 - name: Provision vms for LB check
   hosts: bootstrap_grp, masters_grp, infra_routers_grp
   become: yes

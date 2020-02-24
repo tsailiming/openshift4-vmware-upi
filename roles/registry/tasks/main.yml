@@ -122,7 +122,7 @@
 
 - name: Test registry uri
   uri:
-    url: https://{{registry_server}}:5000/v2/_catalog
+    url: https://{{registry_server}}/v2/_catalog
     user: "{{ registry_username }}"
     password: "{{ registry_password }}"
     status_code: 200

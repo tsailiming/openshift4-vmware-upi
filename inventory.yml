@@ -142,11 +142,12 @@ all:
     base_domain: ltsai.com
     dns_domain:  "{{cluster_name + '.' + base_domain}}"
 
-    openshift_cluster_network:
-    opnehshift_host_prefix:
-    openshift_service_netowrk:
-      
     apps_use_wildcard_dns: yes
+    
+    openshift_cluster_network_cidr: 10.128.0.0/14
+    opnehshift_host_prefix: 23
+    openshift_service_netowrk_cidr: 172.30.0.0/16
+    openshift_restricted_network: yes
     
     # Common path. Default in role
     pip_path: /root/repos/pip
@@ -179,7 +180,9 @@ all:
 
     http_server: "{{ groups['mirror'][0] + '.' + dns_domain }}"
     pip_server: "{{ http_server }}"
-    registry_server: "{{ groups['mirror'][0] + '.' + dns_domain }}"
+    registry_server: "{{ groups['mirror'][0] + '.' + dns_domain }}:5000"
+    podman_auth_file: /root/podmanauth.json
+    podman_tls_verify: false
 
     timesync_ntp_servers:
       - hostname: pool.ntp.org
@@ -191,6 +194,13 @@ all:
     # vcenter_username: 
     # vcenter_password: 
     # vcenter_validate_cert: false
+
+    use_vcp: false
+    # vcp_username: 
+    # vcp_password: 
+    # vcp_datecenter:
+    # vcp_datastore:
+
     
     # rhv_username: admin@internal
     # rhv_password: system
