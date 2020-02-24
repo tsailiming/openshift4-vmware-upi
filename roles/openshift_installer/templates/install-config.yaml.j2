@@ -13,10 +13,10 @@ metadata:
 networking:
   clusterNetworks:
   - cidr: {{openshift_cluster_network_cidr}}
-    hostPrefix: {{opnehshift_host_prefix}}
+    hostPrefix: {{openshift_host_prefix}}
   networkType: OpenShiftSDN
   serviceNetwork:
-  - {{openshift_service_netowrk_cidr}}
+  - {{openshift_service_network_cidr}}
 platform:
 {% if use_vcp %}
   vsphere:
