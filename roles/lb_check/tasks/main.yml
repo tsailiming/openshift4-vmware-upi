@@ -19,7 +19,7 @@
     lb_name: "masters"
     lb_ip: "{{masters_lb_ip}}"
     ports: "{{master_lb_ports}}"
-  when: outer_item in groups['masters']
+  when: outer_item in groups['bootstrap_grp'] + groups['masters_grp']
 
 - name: "Running check for {{ outer_item }} for apps LB VIP"
   include_tasks: tasks/check.yml
@@ -27,7 +27,7 @@
     lb_name: "apps"
     lb_ip: "{{apps_lb_ip}}"
     ports: "{{apps_lb_ports}}"
-  when: outer_item in groups['infra_routers']
+  when: outer_item in groups['infra_routers_grp']
 
 - name: "{{outer_item}} | Power off VM"
   ovirt_vm:

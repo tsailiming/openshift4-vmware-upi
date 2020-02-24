@@ -1,6 +1,6 @@
 ---
 - name: Power off all VMs
-  hosts: masters, infra_routers
+  hosts: bootstrap_grp, masters_grp, infra_routers_grp
   become: no
   gather_facts: no
 
@@ -73,7 +73,7 @@
 
     # Let's do masters first
     - set_fact:
-        test_hosts: "{{ (groups['masters'] | sort) + (groups['infra_routers'] | sort) }}"
+        test_hosts: "{{ (groups['bootstrap_grp'] + groups['masters_grp'] + groups['infra_routers_grp']) | sort }}"
         #test_hosts: "{{ groups['masters'] | sort }}"
         #test_hosts: "{{groups['infra_routers'] | sort }}"
     

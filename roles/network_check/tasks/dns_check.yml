@@ -35,7 +35,7 @@
 
 - set_fact:
     etcd_length: "{{ etcd_srv_record | length }}"
-    master_length: "{{ groups['masters'] | select('search','master') | list | length  }}"
+    master_length: "{{ groups['masters_grp'] | length  }}"
 
 - block:
   - name: Validate A records for servers

@@ -66,7 +66,7 @@
         - genisoimage
 
 - name: Provision vms for LB check
-  hosts: masters, infra_routers
+  hosts: bootstrap_grp, masters_grp, infra_routers_grp
   become: yes
   gather_facts: no
 

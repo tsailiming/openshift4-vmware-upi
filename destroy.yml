@@ -1,6 +1,6 @@
 ---
 - name: Destroy OCP vms 
-  hosts: masters, infra_routers
+  hosts: ocp
   become: yes
   gather_facts: no
 
