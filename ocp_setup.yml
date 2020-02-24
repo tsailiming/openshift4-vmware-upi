@@ -18,7 +18,7 @@
         - "This is the cluster subnet: {{openshift_cluster_network_cidr | ipaddr(0) }}"
         - "This is the host prefix: {{openshift_host_prefix}}"
         - "This is the service subnet: {{openshift_service_network_cidr | ipaddr(0) }}"
-        - "Based on the host prefix, max hosts = {{ cluster_size | int / max_pod_ips | int}}. max pods per host = {{max_pod_ips | int - 2}}"
+        - "Based on the host prefix, max pods per host = {{max_pod_ips | int - 2}}, resulting in max hosts = {{ cluster_size | int / max_pod_ips | int}}"
         - "Based on  service subnet, max service ips = {{ openshift_service_network_cidr | ipaddr('size') }}"
 
     - pause: 
