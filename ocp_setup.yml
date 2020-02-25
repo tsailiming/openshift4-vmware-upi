@@ -31,7 +31,7 @@
       include_role:
         name: custom_iso
       vars:
-        rhcos_image_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/install/{{rhcos_image_dest_path | basename}}"
+        rhcos_image_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/install/{{rhcos_image_path | basename}}"
         ignition_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/ignition"
 
     - name: Create OCP installer files
