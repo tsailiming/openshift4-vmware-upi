@@ -6,9 +6,6 @@
       suffix: openshift
     register: tempfile
 
-  - debug:
-      var: tempfile.path
-
   - name: "Untar openshift-client into {{ tempfile.path }}"
     unarchive:
       src: "{{openshift_client_file}}"

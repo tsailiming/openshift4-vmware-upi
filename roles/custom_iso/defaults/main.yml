@@ -13,3 +13,8 @@ vm_install_dev: sda
 
 rhcos_image_url: http://example.com/install/rhcos-4.2.0-x86_64-metal-bios.raw.gz
 ignition_url: http://example.com/ignition
+
+iso_output_dir: /root/isos
+iso_datastore: b05-data
+iso_datacenter: 
+iso_datastore_path: 

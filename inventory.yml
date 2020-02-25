@@ -8,6 +8,7 @@ all:
           ocp4-registry:
             ansible_host: 192.168.0.179
             vm_memory_mb: 1000
+            vm_mem_reservation_mb: 512
             vm_cpu: 1
             
             vm_disks:
@@ -79,6 +80,7 @@ all:
                 ansible_host: 192.168.100.150
             vars:
               vm_memory_mb: 2048
+              vm_mem_reservation_mb: 1024
               vm_cpu: 1
             
               vm_disks:
@@ -113,6 +115,7 @@ all:
                   ansible_host: 192.168.100.156
             vars:
               vm_memory_mb: 2048
+              vm_mem_reservation_mb: 512            
               vm_cpu: 1
             
               vm_disks:
@@ -129,6 +132,7 @@ all:
                 ansible_host: 192.168.100.155
             vars:
               vm_memory_mb: 2048
+              vm_mem_reservation_mb: 512            
               vm_cpu: 1
             
               vm_disks:
@@ -194,21 +198,25 @@ all:
     # vcenter_password: 
     # vcenter_validate_cert: false
 
-    use_vcp: false
     # vcp_username: 
     # vcp_password: 
     # vcp_datecenter:
     # vcp_datastore:
-
     
     # rhv_username: admin@internal
     # rhv_password: system
-    # rhv_hostname: 
-    # rhv_valdiate_cert: false
+    # rhv_hostname:       
+    # rhv_insecure_cert: true
 
     # registry_username: openshift
     # registry_password: password
     # ##########
+
+    use_vcp: false
+    
+    iso_datastore: b05-data
+    iso_datacenter: 
+    iso_datastore_path:  #For VMware
 
     vm_datastore: b05-data
     vm_datacenter: 

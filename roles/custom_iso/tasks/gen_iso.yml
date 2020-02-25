@@ -1,8 +1,13 @@
 ---
 - name: "{{outer_item}} | Set fact"
   set_fact:
-    iso_file: "{{tempfile.path}}/{{outer_item}}.iso"
+    iso_file: "{{iso_output_dir}}/{{outer_item}}.iso"
   
+- name: "{{outer_item}} | Create iso directory"
+  file:
+    path: "{{iso_output_dir}}"
+    state: directory
+
 - name: "{{outer_item}} | Modify boot entry"
   template:
     src: isolinux.cfg.j2
@@ -21,6 +26,39 @@
     output_iso_path: "{{iso_file}}"
     name: "{{outer_item}}"      
   register: output
+
+- name: "{{outer_item}} | Get ISO size"
+  stat:
+    path: "{{iso_file}}"
+  register: size
+
+- name: Upload ISO to datastore
+  vsphere_copy:
+    hostname: '{{ vcenter_hostname }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'
+    src: "{{iso_file}}"
+    datacenter: "{{iso_datacenter}}"
+    datastore: "{{iso_datastore}}"
+    dest: "{{iso_datastore_path}}"
+  when: vcenter_hostname | default()
+
+- name: Upload ISO to datastore  
+  ovirt_disk:
+    auth:
+      username: "{{ rhv_username }}"
+      password: "{{ rhv_password }}"
+      url: "https://{{ rhv_hostname }}/ovirt-engine/api"
+      insecure: "{{rhv_insecure_cert}}"
+    name: "{{ outer_item }}.iso"
+    upload_image_path: "{{iso_file}}"
+    storage_domain: "{{iso_datastore}}"  
+    size: "{{ (size.stat.size / 1048576) | round(0, 'ceil') | int}}MiB"
+    wait: true
+    bootable: true
+    format: raw
+    content_type: iso
+  when: rhv_hostname | default()
 
 # - debug:
 #     var: output

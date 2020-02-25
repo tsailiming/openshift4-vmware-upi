@@ -5,8 +5,8 @@
       username: "{{ rhv_username }}"
       password: "{{ rhv_password }}"
       url: "https://{{ rhv_hostname }}/ovirt-engine/api"
-      insecure: True
-
+      insecure: "{{rhv_insecure_cert}}"
+      
   - name: Create virtual machine
     ovirt_vm:
       auth: "{{ ovirt_auth }}"
