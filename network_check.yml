@@ -3,6 +3,26 @@
   become: no
   gather_facts: no
 
+  pre_tasks:     
+    - set_fact:
+        host_network_cidr: "{{hostvars[groups['ocp'][0]].ansible_host}}/{{vm_netmask}}"
+        cluster_size: "{{ (openshift_cluster_network_cidr | ipaddr('size'))}}"
+        max_pod_ips: "{{ (2 | pow(32 - openshift_host_prefix))}}"
+
+    - debug:
+        msg: "{{item}}"
+      loop:
+        - "This is the host subnet: {{ host_network_cidr | ipaddr(0) }}"
+        - "Total hosts available: {{host_network_cidr | ipaddr('size') - 2}}"
+        - "This is the cluster subnet: {{openshift_cluster_network_cidr | ipaddr(0) }}"
+        - "This is the host prefix: {{openshift_host_prefix}}"
+        - "This is the service subnet: {{openshift_service_network_cidr | ipaddr(0) }}"
+        - "Based on the host prefix, max pods per host = {{max_pod_ips | int - 2}}, resulting in max hosts = {{ cluster_size | int / max_pod_ips | int}}"
+        - "Based on  service subnet, max service ips = {{ openshift_service_network_cidr | ipaddr('size') }}"
+
+    - pause: 
+        prompt: "Are you sure you want to continue (ctrl+c to abort. Any key to continue)?"
+        
   roles:
     - network_check
       
