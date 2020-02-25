@@ -32,7 +32,7 @@
     path: "{{iso_file}}"
   register: size
 
-- name: Upload ISO to datastore
+- name: Upload ISO to VMware datastore
   vsphere_copy:
     hostname: '{{ vcenter_hostname }}'
     username: '{{ vcenter_username }}'
@@ -43,7 +43,7 @@
     dest: "{{iso_datastore_path}}"
   when: vcenter_hostname | default()
 
-- name: Upload ISO to datastore  
+- name: Upload ISO to RHV datastore  
   ovirt_disk:
     auth:
       username: "{{ rhv_username }}"
@@ -59,16 +59,3 @@
     format: raw
     content_type: iso
   when: rhv_hostname | default()
-
-# - debug:
-#     var: output
-
-  # - name: Upload ISO to VMware datastore
-  #   vsphere_copy:
-  #     hostname: '{{ vcenter_hostname }}'
-  #     username: '{{ vcenter_username }}'
-  #     password: '{{ vcenter_password }}'
-  #     src: "{{iso_file}}"
-  #     datacenter: "{{vm_iso_datacenter}}"
-  #     datastore: "{{vm_iso_datastore}}"
-  #     path: "{{ iso_remote_path }}"  
