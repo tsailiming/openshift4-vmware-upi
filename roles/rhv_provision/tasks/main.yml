@@ -12,7 +12,7 @@
       auth: "{{ ovirt_auth }}"
       state: stopped
       delete_protected: False
-      name: "{{ inventory_hostname }}"
+      name: "{{ inventory_hostname + '.' + dns_domain}}"
       template: "{{ rhel_vm_template | default(omit) }}"
       cluster: "{{ vm_cluster }}"
       type: server

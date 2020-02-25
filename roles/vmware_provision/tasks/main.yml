@@ -12,7 +12,7 @@
     password: "{{ vcenter_password }}"
     validate_certs: "{{ vcenter_validate_cert }}"
     folder: "{{ vm_folder }}"
-    name: "{{ inventory_hostname }}"
+    name: "{{ inventory_hostname + '.' + dns_domain }}"
     state: "{{ vm_state }}"
     datacenter: "{{ vm_datacenter }}"
     cluster: "{{ vm_cluster }}"
