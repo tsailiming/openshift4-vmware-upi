@@ -11,3 +11,4 @@ static_routes:
   - prometheus-k8s-openshift-monitoring
   - thanos-querier-openshift-monitoring
   - terminal-terminal
+  - default-route-openshift-image-registry
