@@ -145,8 +145,8 @@ ansible_host: xxx.xxx.xxx.xxx
 vm_memory_mb: 7168
 vm_cpu: 4            
 vm_disks: 
-  - size: 80
-  type: thin
+  - size: 80 
+  	type: thin
 ```
 
 ### Important Ansible variables
@@ -226,7 +226,7 @@ After installation is completed, you can eject all the cdroms:
 
 # Clean Up
 
-To destroy all the vms
+To destroy all the vms, excluding bastion:
 ``` bash
 # ansible-playbook --ask-vault-pass destory.yml
 ```
