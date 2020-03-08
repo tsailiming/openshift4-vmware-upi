@@ -1,6 +1,6 @@
 # Introduction
 
-This repository contains a collection of Ansible playbooks to help to install Red Hat OpenShift Container Platform 4 on VMware using the UPI method. It currently supports a connected (or with Red Hat Satellite) and disconnected environment. No DHCP/PXE is required. 
+This repository contains a collection of Ansible playbooks to help to install Red Hat OpenShift Container Platform 4 on VMware using the UPI method. It currently supports a connected/disconnected environment. No DHCP/PXE is required. 
 
 # Playbooks
 
@@ -13,7 +13,7 @@ This repository contains a collection of Ansible playbooks to help to install Re
 | create_iso| This creates a boot iso for each node. |
 | ocp_setup | This creates the installer and boot each vm with the iso.|
 | destroy | This destroys the OCP vms, excluding the bastion. |
-| remote_cdrom | This ejects the CDROM from the OCP nodes. |
+| remove_cdrom | This ejects the CDROM from the OCP nodes. |
 
 # Prerequisite Setup
 
@@ -25,7 +25,7 @@ This repository contains a collection of Ansible playbooks to help to install Re
 # systemctl enable vmtoolsd
 ```
 
-Then export this into a VMware OVA file. 
+Then export this vm into a VMware OVA file. 
 
 ## Bringing your own repos 
 
@@ -221,7 +221,7 @@ The installation will start and you can continue by following the [OpenShift Ins
 
 After installation is completed, you can eject all the cdroms:
 ``` bash
-# ansible-playbook --ask-vault-pass remote_cdrom.yml
+# ansible-playbook --ask-vault-pass remove_cdrom.yml
 ```
 
 # Clean Up
