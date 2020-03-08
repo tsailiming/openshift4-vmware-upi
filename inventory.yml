@@ -125,6 +125,8 @@ all:
     registry_data_tar_path: /root/repos/registry_data.tar.gz # If this does not exists, a blank registry will be created
     rhcos_image_path: /root/repos/rhcos-4.2.0-x86_64-metal-bios.raw.gz
     rhcos_installer_iso: /root/repos/rhcos-4.2.0-x86_64-installer.iso
+    openshift_client_file: /root/repos/openshift-client-linux-4.2.10.tar.gz
+    openshift_installer_file: /root/repos/openshift-install-linux-4.2.10.tar.gz
     iso_output_dir: /root/isos 
 
     # #pip_server: "{{ http_server }}"

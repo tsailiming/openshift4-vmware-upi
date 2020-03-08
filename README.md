@@ -1,7 +1,6 @@
 # Introduction
 
-This repository contains a collection of Ansible playbooks to help to bring 
-up the Red Hat OpenShift Container Platform 4 on VMware using the UPI method. It currently supports a connected (or with Red Hat Satellite) and disconnected environment. No DHCP/PXE is required. 
+This repository contains a collection of Ansible playbooks to help to install Red Hat OpenShift Container Platform 4 on VMware using the UPI method. It currently supports a connected (or with Red Hat Satellite) and disconnected environment. No DHCP/PXE is required. 
 
 # Playbooks
 
@@ -76,6 +75,14 @@ cp /path/to/govc /root/repos/bin/govc
 # podman save docker.io/library/registry:2 -o /root/repos/registry.tar
 ```
 
+### OpenShift installer
+``` bash
+# cd /root/repos
+# curl -O https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.2.10/openshift-install-linux-4.2.10.tar.gz
+# curl -O https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.2.10/openshift-client-linux-4.2.10.tar.gz
+# curl -O https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.2/4.2.0/rhcos-4.2.0-x86_64-metal-bios.raw.gz
+# curl -O https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.2/4.2.0/rhcos-4.2.0-x86_64-installer.iso
+```
 # Setup
 
 ## Configuring the bastion host
