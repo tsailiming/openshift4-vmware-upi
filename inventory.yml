@@ -2,89 +2,49 @@ all:
   hosts:
     
   children:
-      # Specify only 1 server in mirror group
-      mirror:
-        hosts:
-          ocp4-registry:
-            ansible_host: 192.168.0.179
-            vm_memory_mb: 1000
-            vm_mem_reservation_mb: 512
-            vm_cpu: 1
-            
-            vm_disks:
-              - size: 20
-                type: thin
       # Specify only 1 server in bastion group. 
       # Bastion is the host where the playbook is running. 
-      bastion:
+      bastion_grp:
         hosts:
-          ocp4-bastion:
-            ansible_host: 192.168.100.1
-
-      # LB using haproxy on bastion which is 2 legged. Not same subdomain as OCP.
-      apps_lb:
-        hosts:
-          bastion.ocp.ltsai.com:
-            ansible_host: 192.168.0.230    
-            
-        vars: 
-          lb_type: haproxy
-
-      master_lb:
-        hosts:
-          bastion.ocp.ltsai.com:
-            ansible_host: 192.168.0.230    
-            
-        vars:
-          lb_type: haproxy
+          bastion:
+            #ansible_host: 192.168.0.224
+            ansible_host: 192.168.0.178
+            setup_haproxy: yes
+            setup_registry: yes          
          
       # LB using haproxy on bastion
-      # apps_lb:
-      #   children:
-      #     bastion:
-      #   vars: 
-      #     lb_type: haproxy
+      apps_lb:
+        children:
+          bastion_grp:
+            
+      master_lb:
+        children:
+          bastion_grp:
 
-      # master_lb:
-      #   children:
-      #     bastion:    
-      #   vars:
-      #     lb_type: haproxy
-                    
       # External LB (F5, etc). 
       # Inventory name does not matter since we are not managing it
       # apps_lb:
       #   hosts:
       #     lb1:
       #       ansible_host: xxx.xxx.xxx.xxx
-      #   vars: 
-      #     lb_type: others
 
       # master_lb:
       #   hosts:
       #     lb2:
       #       ansible_host: xxx.xxx.xxx.xxx
-      #   vars: 
-      #     lb_type: others
-     
-      infra:
-        children:
-          mirror:
-          bastion: 
 
       ocp:
         children:
           bootstrap_grp:
             hosts:
               bootstrap:            
-                ansible_host: 192.168.100.150
+                ansible_host: 192.168.0.225
             vars:
-              vm_memory_mb: 2048
-              vm_mem_reservation_mb: 1024
-              vm_cpu: 1
+              vm_memory_mb: 7168
+              vm_cpu: 4
             
               vm_disks:
-                - size: 20
+                - size: 80
                   type: thin
                   
               ignition_file: bootstrap.ign
@@ -92,98 +52,82 @@ all:
           masters_grp:
             hosts:              
               master0:
-                ansible_host: 192.168.100.151                
+                ansible_host: 192.168.0.226              
               master1:
-                ansible_host: 192.168.100.152  
+                ansible_host: 192.168.0.227
               master2:
-                ansible_host: 192.168.100.153  
+                ansible_host: 192.168.0.228
 
             vars:
-              vm_memory_mb: 2048
-              vm_cpu: 1
+              vm_memory_mb: 7168
+              vm_cpu: 4
             
               vm_disks:
-                - size: 20
+                - size: 80
                   type: thin
 
               ignition_file: master.ign
             
               
           workers_grp:
+            children:
+              infra_routers_grp:
             hosts:
-                worker2:
-                  ansible_host: 192.168.100.156
-            vars:
-              vm_memory_mb: 2048
-              vm_mem_reservation_mb: 512            
-              vm_cpu: 1
-            
-              vm_disks:
-                - size: 20
-                  type: thin
               
-              ignition_file: worker.ign
+            # hosts:
+            #     worker2:
+            #       ansible_host: 192.168.0.231
+            # vars:
+            #   vm_memory_mb: 2048
+            #   vm_cpu: 1
+            
+            #   vm_disks:
+            #     - size: 80
+            #       type: thin
+              
+            #   ignition_file: worker.ign
   
           infra_routers_grp:
             hosts:
               worker0:
-                ansible_host: 192.168.100.154
+                ansible_host: 192.168.0.229
               worker1:
-                ansible_host: 192.168.100.155
+                ansible_host: 192.168.0.230
+              worker2:
+                ansible_host: 192.168.0.231
             vars:
-              vm_memory_mb: 2048
-              vm_mem_reservation_mb: 512            
-              vm_cpu: 1
+              vm_memory_mb: 7168
+              vm_cpu: 4
             
               vm_disks:
-                - size: 20
+                - size: 80
                   type: thin
               
               ignition_file: worker.ign
         
   vars:
-    cluster_name: ocp
-    base_domain: ltsai.com
-    dns_domain:  "{{cluster_name + '.' + base_domain}}"
-
-    apps_use_wildcard_dns: yes
+    ### OpenShift Installer ###
+    cluster_name: ocppoc
+    base_domain: vsphere.lab.ltsai.com
     
     openshift_cluster_network_cidr: 10.128.0.0/14
     openshift_host_prefix: 23
     openshift_service_network_cidr: 172.30.0.0/16
-    
-    # Common path. Default in role
+    ########
+
+    apps_use_wildcard_dns: yes # Whether to check for wildcard dns
+        
+    # Defaults in roles
     pip_path: /root/repos/pip
     registry_image_tar_path: /root/repos/registry.tar
-    registry_data_tar_path: /root/repos/registry_data.tar.gz
+    
+    # Created by (cd /opt/registry/data && tar cvzf /tmp/registry_data.tar.gz .)
+    registry_data_tar_path: /root/repos/registry_data.tar.gz # If this does not exists, a blank registry will be created
     rhcos_image_path: /root/repos/rhcos-4.2.0-x86_64-metal-bios.raw.gz
     rhcos_installer_iso: /root/repos/rhcos-4.2.0-x86_64-installer.iso
-    
-    # If necessary, configure the local yum repo. 
-    # EPEL repo contains only the python2-pip rpm. 
-    yum_repos:
-      #- name: rhel-7-server-ansible-2-rpms
-      #  src: /root/repos/rhel-7-server-ansible-2-rpms
-      #  dest: /var/www/html/repos/rhel-7-server-ansible-2-rpms
+    iso_output_dir: /root/isos 
 
-      - name: epel
-        src: /root/repos/epel
-        dest: /var/www/html/repos/epel
-      
-    yum_conf:
-      #- name: rhel-7-server-ansible-2-rpms
-      #  baseurl: "{% if inventory_hostname != groups['mirror'][0] %}https://{{http_server}}{% else %}file:///var/www/html/{% endif %}/repos/rhel-7-server-ansible-2-rpms"
-      #  gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-      #  sslverify: no
-      
-      - name: epel
-        baseurl: "{% if inventory_hostname != groups['mirror'][0] %}https://{{http_server}}{% else %}file:///var/www/html/{% endif %}/repos/epel/7/x86_64"
-        gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-        sslverify: no
-
-    http_server: "{{ groups['mirror'][0] + '.' + dns_domain }}"
-    pip_server: "{{ http_server }}"
-    registry_server: "{{ groups['mirror'][0] + '.' + dns_domain }}:5000"
+    # #pip_server: "{{ http_server }}"
     podman_auth_file: /root/.podmanauth.json
     podman_tls_verify: false
 
@@ -191,18 +135,33 @@ all:
       - hostname: pool.ntp.org
         iburst: yes
 
+    vm_template: rhel7_template
+
+    restricted_network: no
+
+    ########
+    # If necessary, configure the local yum repo. 
+    # yum_repos:
+    #   - name: rhel-7-server-ansible-2-rpms
+    #     src: /root/repos/rhel-7-server-ansible-2-rpms
+    #     dest: /var/www/html/repos/rhel-7-server-ansible-2-rpms
+      
+    # yum_conf:
+    #   - name: rhel-7-server-ansible-2-rpms
+    #     baseurl: "https://{{https_server}}/repos/rhel-7-server-ansible-2-rpms"
+    #     gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+    #     sslverify: no  
+    ########
+
     # This should be in vault.yml
-    ##########
     # vcenter_hostname: 
     # vcenter_username: 
     # vcenter_password: 
-    # vcenter_validate_cert: false
+    # vcenter_insecure_ssl: true
 
     # vcp_username: 
     # vcp_password: 
-    # vcp_datecenter:
-    # vcp_datastore:
-    
+
     # rhv_username: admin@internal
     # rhv_password: system
     # rhv_hostname:       
@@ -210,32 +169,41 @@ all:
 
     # registry_username: openshift
     # registry_password: password
-    # ##########
 
-    use_vcp: false
-    
-    iso_datastore: b05-data
-    iso_datacenter: 
-    iso_datastore_path:  #For VMware
+    # ocp_pull_secret: # from cloud.redhat.com when doing a connected install
+    ########
 
-    vm_datastore: b05-data
-    vm_datacenter: 
-    vm_folder: 
-    vm_cluster: Default
-    vm_network: private
+    # VMware Cloud Provider (VCP) for Kubernetes
+    use_vcp: true
+    vcp_datacenter: Datacenter
+    vcp_datastore: nfs_ds
+    ########
+        
+    # Where to upload boot iso
+    iso_datastore: nfs_ds
+    iso_datacenter: Datacenter
+    iso_datastore_path: /iso #For VMware
+    ########
 
-    vm_interface_name: eth0
+    # VMware info for vms
+    vm_datacenter: Datacenter
+    vm_datastore: nfs_ds    
+    vm_folder: "/{{vm_datacenter}}/vm/{{cluster_name}}" # Folder name must match cluster name
+    vm_cluster: lab
+    vm_network: "VM Network"
+    ########
+
+    # VM information
+    vm_interface_name: ens192
     vm_netmask: 255.255.255.0  
-    vm_gateway: 192.168.100.1
+    vm_gateway: 192.168.0.1
     vm_dns:
       - 192.168.0.212
-      - 8.8.8.8
     vm_install_dev: sda
-
-    rhel_vm_template: rhel_7_6_w_cloud_user
+    ########
 
     # Configure this if there is a local Satellite. 
-    # https://github.com/oasis-roles/rhsm
+    # From https://github.com/oasis-roles/rhsm
     # rhsm_org_id: IT
     # rhsm_activationkey: rhel-7Server
     # rhsm_server_hostname: sat6.lab.ltsai.com
@@ -244,6 +212,23 @@ all:
     #     - '*'
     #   enabled:
     #     - rhel-7-server-rpms
-    #     - rhel-7-server-extras-rpms
-    #     - rhel-7-server-ansible-2-rpms
+    #     - rhel-7-server-extras-rpms # podman
+    ########
+
+    # This is for the LB check. Wait for N seconds before testing 
+    # whether Apache port is opened. Delay should include OS bootup time 
+    # and ensuring open-vm-tools is reporting the correct vm power status 
+    # to vCenter. Used in roles/lb_check/main.yml
+    delay_check_apache_start: 30 
+
+    # List of hosts to generate iso for
+    iso_ocp_hosts: "{{ groups['ocp'] | sort }}"
+
+    #### DO NOT CHANGE ###
+    dns_domain:  "{{cluster_name + '.' + base_domain}}" 
+    http_server: "{{ groups['bastion_grp'][0] + '.' + dns_domain }}:8080" 
+    https_server: "{{ groups['bastion_grp'][0] + '.' + dns_domain }}:8443"
+    registry_server: "{{ groups['bastion_grp'][0] + '.' + dns_domain }}:5000"    
+    #####
+    
     

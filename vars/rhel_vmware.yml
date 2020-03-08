@@ -1,8 +1,4 @@
 ---
 vm_guest_id: rhel7_64Guest
-vm_state: poweredon
-vm_template: "{{ rhel_vm_template }}"
 vm_customization: 
-  domain: "{{ dns_domain }}"
-  hostname: "{{ inventory_hostname + '.' + dns_domain  }}"
   dns_servers: "{{ vm_dns }}"

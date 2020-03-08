@@ -1,0 +1,38 @@
+---
+- name: Create and upload OCP ISOs
+  hosts: localhost
+  become: no
+  gather_facts: no
+
+  vars:
+    rhcos_image_dest_path: /var/www/html/install/
+    
+  vars_files:
+    - vault.yml
+
+  tasks:    
+    - name: Ensure /var/www/html/install exists
+      file:
+        path: "{{rhcos_image_dest_path}}"
+        state: directory  
+        owner: root
+        group: root
+        mode: 0755    
+      
+    - name: "Check if RHCOS image exists in {{rhcos_image_dest_path}}"
+      stat:
+        path: "{{rhcos_image_dest_path}}/{{rhcos_image_path|basename}}"
+      register: output      
+
+    - name: "Copy RHCOS image to bastion server {{rhcos_image_dest_path}}"
+      copy:
+        src: "{{rhcos_image_path}}"
+        dest: "{{rhcos_image_dest_path}}"
+      when: not output.stat.exists
+      
+    - name: Create boot iso
+      include_role:
+        name: custom_iso
+      vars:
+        rhcos_image_url: "http://{{ http_server }}/install/{{rhcos_image_path | basename}}"
+        ignition_url: "http://{{ http_server }}/ignition"

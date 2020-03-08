@@ -1,5 +1,5 @@
 ---
-- name: "{{outer_item}} | Set fact"
+- name: "{{outer_item}} | Set fact for iso_file var"
   set_fact:
     iso_file: "{{iso_output_dir}}/{{outer_item}}.iso"
   
@@ -27,35 +27,14 @@
     name: "{{outer_item}}"      
   register: output
 
-- name: "{{outer_item}} | Get ISO size"
-  stat:
-    path: "{{iso_file}}"
-  register: size
-
 - name: Upload ISO to VMware datastore
   vsphere_copy:
     hostname: '{{ vcenter_hostname }}'
     username: '{{ vcenter_username }}'
     password: '{{ vcenter_password }}'
+    validate_certs: "{{ not vcenter_insecure_ssl }}"
     src: "{{iso_file}}"
     datacenter: "{{iso_datacenter}}"
     datastore: "{{iso_datastore}}"
-    dest: "{{iso_datastore_path}}"
-  when: vcenter_hostname | default()
+    path: "{{iso_datastore_path}}/{{iso_file | basename }}"
 
-- name: Upload ISO to RHV datastore  
-  ovirt_disk:
-    auth:
-      username: "{{ rhv_username }}"
-      password: "{{ rhv_password }}"
-      url: "https://{{ rhv_hostname }}/ovirt-engine/api"
-      insecure: "{{rhv_insecure_cert}}"
-    name: "{{ outer_item }}.iso"
-    upload_image_path: "{{iso_file}}"
-    storage_domain: "{{iso_datastore}}"  
-    size: "{{ (size.stat.size / 1048576) | round(0, 'ceil') | int}}MiB"
-    wait: true
-    bootable: true
-    format: raw
-    content_type: iso
-  when: rhv_hostname | default()

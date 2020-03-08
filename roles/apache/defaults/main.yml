@@ -1,2 +1,4 @@
 ---
-additional_https_ports: []
+httpd_port: 80
+https_ports: 
+  - 443

@@ -6,47 +6,23 @@
 
   vars_files:
     - vault.yml
+    - vars/rhel_vmware.yml
 
   tasks:
-    # - name: Include VMware variables
-    #   include_vars: rhel_vmware.yml
-    #   when: vcenter_hostname | default()
-
-    # - name: Include RHV variables
-    #   include_vars: rhel_rhv.yml
-    #   when: rhv_hostname | default()
-
-    # - include_role:
-    #     name: rhv_provision
-    #   when: rhv_hostname | default()
-
-    - name: Authenticate to oVirt
-      ovirt_auth:
-        username: "{{ rhv_username }}"
-        password: "{{ rhv_password }}"
-        url: "https://{{ rhv_hostname }}/ovirt-engine/api"
-        insecure: True
+    - name: Power off vm
+      vmware_guest_powerstate:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ not vcenter_insecure_ssl }}"
+        folder: "{{ vm_folder }}"
+        name: "{{ inventory_hostname }}.{{ dns_domain }}"
+        state: shutdown-guest 
+        state_change_timeout: 200
+      register: output
+      failed_when: output.instance.hw_power_status != 'poweredOff'
       delegate_to: localhost
-
-    - name: Power off VM
-      ovirt_vm:
-        auth: "{{ ovirt_auth }}"
-        state: stopped
-        name: "{{ inventory_hostname }}"
-      delegate_to: localhost
-
-    # - name: Power off vm
-    #   vmware_guest_powerstate:
-    #     hostname: "{{ vcenter_hostname }}"
-    #     username: "{{ vcenter_username }}"
-    #     password: "{{ vcenter_password }}"
-    #     validate_certs: "{{ vcenter_validate_cert }}"
-    #     folder: "{{ vm_folder }}"
-    #     name: "{{ inventory_name }}"
-    #     state: shutdown-guest
-    #     state_change_timeout: 200
-    #   delegate_to: localhost
-
+      
 - name: LB check
   hosts: localhost 
   become: no
@@ -59,18 +35,12 @@
     master_lb_ports:
       - 6443
       - 22623
+      
     apps_lb_ports:
       - 80
       - 443
 
   tasks:  
-    - name: "Authenticate to oVirt"
-      ovirt_auth:
-        username: "{{ rhv_username }}"
-        password: "{{ rhv_password }}"
-        url: "https://{{ rhv_hostname }}/ovirt-engine/api"
-        insecure: True
-
     # Let's do masters first
     - set_fact:
         test_hosts: "{{ (groups['bootstrap_grp'] + groups['masters_grp'] + groups['infra_routers_grp']) | sort }}"

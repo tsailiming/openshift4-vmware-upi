@@ -3,7 +3,22 @@
   become: no
   gather_facts: no
 
+  vars_files:
+    vault.yml
+
   pre_tasks:     
+    - name: pip install
+      pip:
+        name: "{{item}}"
+        extra_args: "--no-index --find-links {{pip_path}}" 
+      delegate_to: localhost
+      run_once: true
+      loop:
+        - dnspython 
+        - netaddr  
+        - ipaddr
+        - jmespath
+
     - set_fact:
         host_network_cidr: "{{hostvars[groups['ocp'][0]].ansible_host}}/{{vm_netmask}}"
         cluster_size: "{{ (openshift_cluster_network_cidr | ipaddr('size'))}}"

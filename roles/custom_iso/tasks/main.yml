@@ -40,7 +40,7 @@
 - block:
   - name: Generate boot ISO
     include_tasks: gen_iso.yml
-    loop: "{{ groups['ocp'] | sort }}"
+    loop: "{{ iso_ocp_hosts }}"
     loop_control:
       loop_var: outer_item
 
@@ -50,7 +50,7 @@
         path: "{{iso_mount_path.path}}"
         state: unmounted #If unmounted, the device will be unmounted without changing fstab.
 
-    - name: Delete iso mount path
+    - name: Delete ISO mount path
       file:
         path: "{{iso_mount_path}}"
         state: absent

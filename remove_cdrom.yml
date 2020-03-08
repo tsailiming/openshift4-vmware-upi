@@ -1,5 +1,5 @@
 ---
-- name: Destroy all OCP vms 
+- name: Destroy OCP vms 
   hosts: ocp
   become: yes
   gather_facts: no
@@ -29,6 +29,9 @@
       register: vm_info
       delegate_to: localhost
       
+    # - debug:
+    #     var: vm_info
+
     - name: Set json query fact
       set_fact:
         query: "[?guest_name=='{{ inventory_hostname }}.{{ dns_domain }}']"
@@ -56,3 +59,26 @@
       
       delegate_to: localhost
       when: vm_info.virtual_machines | json_query(query)
+
+    # - name: Power off vm
+    #   vmware_guest_powerstate:
+    #     hostname: "{{ vcenter_hostname }}"
+    #     username: "{{ vcenter_username }}"
+    #     password: "{{ vcenter_password }}"
+    #     validate_certs: "{{ not vcenter_insecure_ssl }}"
+    #     folder: "{{ vm_folder }}"
+    #     name: "{{ inventory_hostname }}.{{ dns_domain }}"
+    #     state: powered-off
+    #     state_change_timeout: 200
+    #   delegate_to: localhost
+
+    # - name: Destroy vm
+    #   vmware_guest:
+    #     hostname: "{{ vcenter_hostname }}"
+    #     username: "{{ vcenter_username }}"
+    #     password: "{{ vcenter_password }}"
+    #     validate_certs: "{{ not vcenter_insecure_ssl }}"
+    #     folder: "{{ vm_folder }}"
+    #     name: "{{ inventory_hostname + '.' + dns_domain }}"
+    #     state: absent
+    #   delegate_to: localhost

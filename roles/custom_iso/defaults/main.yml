@@ -1,4 +1,6 @@
 ---
+iso_ocp_hosts: "{{ groups['ocp'] | sort }}"
+
 rhcos_installer_iso: /root/repos/rhcos-4.2.0-x86_64-installer.iso
 
 vm_name: name
@@ -18,3 +20,4 @@ iso_output_dir: /root/isos
 iso_datastore: b05-data
 iso_datacenter: 
 iso_datastore_path: 
+

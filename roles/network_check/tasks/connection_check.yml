@@ -10,12 +10,34 @@
 - name: Test login to VMware vCenter
   command: govc about
   environment:
-    GOVC_URL: "https://{{ vcenter_hostname }}/sdk"
-    GOVC_USERNAME: "{{ vcenter_username }}"
-    GOVC_PASSWORD: "{{ vcenter_password }}"
+    GOVC_URL: "https://{{ item.vcenter_hostname }}/sdk"
+    GOVC_USERNAME: "{{ item.vcenter_username }}"
+    GOVC_PASSWORD: "{{ item.vcenter_password }}"
     GOVC_INSECURE: "{{ vcenter_insecure_ssl }}"
+  loop:
+    - { vcenter_hostname: "{{vcenter_hostname}}", vcenter_username: "{{vcenter_username}}", vcenter_password: "{{vcenter_password}}" }
+    - { vcenter_hostname: "{{vcenter_hostname}}", vcenter_username: "{{vcp_username}}", vcenter_password: "{{vcp_password}}}" }    
+  no_log: True
+  changed_when: False
 
-- set_fact:
+- name: Check for VMware datacenter and datastore
+  command: "govc ls /{{item.vm_datacenter}}/datastore/{{item.vm_datastore}}"
+  environment:
+    GOVC_URL: "https://{{ item.vcenter_hostname }}/sdk"
+    GOVC_USERNAME: "{{ item.vcenter_username }}"
+    GOVC_PASSWORD: "{{ item.vcenter_password }}"
+    GOVC_INSECURE: "{{ vcenter_insecure_ssl }}"
+  register: output
+  changed_when: False
+  failed_when: output.stdout == ""
+  loop:
+    - { vcenter_hostname: "{{vcenter_hostname}}", vcenter_username: "{{vcenter_username}}", vcenter_password: "{{vcenter_password}}", vm_datastore: "{{vm_datastore}}", vm_datacenter: "{{vm_datacenter}}" }
+    - { vcenter_hostname: "{{vcenter_hostname}}", vcenter_username: "{{vcp_username}}", vcenter_password: "{{vcp_password}}}", vm_datastore: "{{vcp_datastore}}", vm_datacenter: "{{vcp_datacenter}}" } 
+    - { vcenter_hostname: "{{vcenter_hostname}}", vcenter_username: "{{vcenter_username}}", vcenter_password: "{{vcenter_password}}}", vm_datastore: "{{iso_datastore}}", vm_datacenter: "{{iso_datacenter}}" } 
+  no_log: True
+
+- name: Get load balancer ports to check
+  set_fact:
     lbs: "{{ lbs | default([]) + [ {'ansible_host': hostvars[groups[item.name][0]].ansible_host, 'ports': item.ports} ] }}"
   loop:
     - {name: apps_lb, ports: [80, 443]}
@@ -29,4 +51,5 @@
     delay: 0               # No wait before first check (sec)
     timeout: 5             # Stop checking after timeout (sec)
   loop: "{{ lbs | subelements('ports') }}"
-
+  when: hostvars[groups['bastion_grp'][0]].setup_haproxy == false
+  

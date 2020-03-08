@@ -7,13 +7,12 @@
   loop:
     - podman
     - httpd-tools
-    - python2-pip
     - tar 
 
 - name: pip install 
   pip:
     name: "{{ item }}"
-    extra_args: "--index-url https://{{pip_server}}/repos/pip  --trusted-host {{pip_server}}" 
+    extra_args: "--no-index --find-links {{pip_path}}" 
   loop:
     - cryptography
     - passlib
@@ -23,7 +22,7 @@
   file:
     path: "/opt/registry/{{item}}"
     state: directory
-    mode: '0755'
+    mode: 0755
   loop:
     - auth
     - certs
@@ -94,13 +93,20 @@
 - name: Import registry container image
   command: podman image load -i "/tmp/{{registry_image_tar_path | basename}}"
 
+# This may be a connected registry mirror
+- name: Check if registry data tarball exists
+  stat:
+    path: "{{registry_data_tar_path}}"
+  register: output
+
 - name: Unarchive registry data to /opt/registry/data
   unarchive:
     src: "{{registry_data_tar_path}}"
     dest: /opt/registry/data
     owner: root
     mode: 0644
-    
+  when: output.stat.exists
+
 - name: Install registry sevice file
   copy:
     src: ocp4-registry.service
@@ -130,5 +136,4 @@
     validate_certs: no
   register: result
   failed_when: result.json.repositories is not defined
-  delegate_to: localhost
 

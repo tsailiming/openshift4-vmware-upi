@@ -23,12 +23,13 @@ platform:
     vcenter: {{ vcenter_hostname }}
     username: "{{ vcp_username }}"
     password: "{{ vcp_password }}"
-    datacenter: {{ vcp_datecenter }}
+    datacenter: {{ vcp_datacenter }}
     defaultDatastore: {{ vcp_datastore }}
 {% else %}
   none: {} 
 {% endif %}
-pullSecret: '{"auths":{"{{ registry_server }}": {"auth": "{{ pull_secret }}"}}}'
+pullSecret: '{{pull_secret}}'
+{% if restricted_network %}
 imageContentSources:
 - mirrors:
   - {{ registry_server }}{{registry_path}}
@@ -36,6 +37,8 @@ imageContentSources:
 - mirrors:
   - {{ registry_server }}{{registry_path}}
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-sshKey: '{{ ssh_var }}'
 additionalTrustBundle: |
 {{ crt_var|indent(2, true) }}
+{% endif %}
+sshKey: '{{ ssh_var }}'
+

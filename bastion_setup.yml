@@ -1,0 +1,89 @@
+---
+- name: Setup bastion host
+  hosts: bastion_grp
+  connection: local
+  become: yes
+  gather_facts: yes
+
+  vars_files:
+    - vault.yml
+
+  vars:
+    podman_tls_verify: false
+    httpd_port: 8080
+    https_ports: 
+      - 8443
+      
+    timesync_ntp_provider: chrony
+  
+  tasks:
+    - name: Pip install
+      pip:
+        name: "{{item}}"
+        extra_args: "--no-index --find-links {{pip_path}}" 
+      delegate_to: localhost
+      run_once: true
+      loop:
+        - pyvmomi
+    
+    - name: Setup local yum repo
+      include_role:
+        name: "{{item}}"
+      loop:
+        - yum-repo
+        - yum-conf
+      when: yum_repos is defined and yum_conf is defined
+
+    - name: Running role
+      include_role:
+        name: "{{ outer_item }}"
+      loop:
+        - common
+        - apache    
+        - rhel-system-roles.timesync
+      loop_control:
+        loop_var: outer_item
+
+    - block:
+      - name: Setup registry
+        include_role: 
+          name: registry
+
+      - name: b64encode registry authentication string
+        set_fact:
+          password_string: "{{registry_username + ':' + registry_password }}"
+          
+      - name: Create authentication json string
+        set_fact: 
+          auth_file_content: 
+            auths: '{ "{{ registry_server }}": {"auth": "{{ password_string | b64encode }}"} }'   
+
+      - name: "Save credentials to {{podman_auth_file}}"
+        copy:
+          content: "{{auth_file_content | to_nice_json}}"
+          dest: "{{podman_auth_file}}"
+        
+      - name: Podman login to registry
+        command: podman login --authfile {{podman_auth_file}} {{registry_server}} --tls-verify={{podman_tls_verify}}
+      
+      when: setup_registry        
+
+    - name: Setup haproxy
+      include_role:
+        name: haproxy
+      when: setup_haproxy
+              
+    - name: Install packages for bastion
+      yum:
+        name: "{{item}}"
+        state: latest
+      loop:
+        - podman
+        - skopeo
+        - buildah
+        - genisoimage
+
+
+      
+
+      

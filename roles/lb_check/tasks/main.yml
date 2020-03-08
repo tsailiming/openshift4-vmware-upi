@@ -1,15 +1,26 @@
 ---
 # tasks file for lb_check
+# - name: "{{outer_item}} | Power on VM"
+#   ovirt_vm:
+#     auth: "{{ ovirt_auth }}"
+#     state: running
+#     name: "{{ outer_item }}"
+
 - name: "{{outer_item}} | Power on VM"
-  ovirt_vm:
-    auth: "{{ ovirt_auth }}"
-    state: running
-    name: "{{ outer_item }}"
+  vmware_guest_powerstate:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: "{{ not vcenter_insecure_ssl }}"
+    folder: "{{ vm_folder }}"
+    name: "{{ outer_item }}.{{ dns_domain }}"
+    state: powered-on
+    state_change_timeout: 200
 
 - name: "{{outer_item}} | Wait for Apache is up"
   wait_for:
     port: 80
-    delay: 10 # Delay on LB backend timeout and OS/apache startup
+    delay: "{{ delay_check_apache_start | default(30) }}" # Delay on LB backend timeout and OS/apache startup
     timeout: 200
     host: "{{ outer_item + '.' + dns_domain }}"
 
@@ -29,8 +40,19 @@
     ports: "{{apps_lb_ports}}"
   when: outer_item in groups['infra_routers_grp']
 
+# - name: "{{outer_item}} | Power off VM"
+#   ovirt_vm:
+#     auth: "{{ ovirt_auth }}"
+#     state: stopped
+#     name: "{{ outer_item }}"
+
 - name: "{{outer_item}} | Power off VM"
-  ovirt_vm:
-    auth: "{{ ovirt_auth }}"
-    state: stopped
-    name: "{{ outer_item }}"
+  vmware_guest_powerstate:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: "{{ not vcenter_insecure_ssl }}"
+    folder: "{{ vm_folder }}"
+    name: "{{ outer_item }}.{{ dns_domain }}"
+    state: shutdown-guest
+    state_change_timeout: 200

@@ -1,2 +1,3 @@
 ---
 # defaults file for lb_check
+delay_check_apache_start: 30

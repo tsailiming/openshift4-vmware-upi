@@ -6,4 +6,6 @@ vcenter_insecure_ssl: yes
 additional_routes: []
   #- hello-openshift
 
+pip_path: 
+
 

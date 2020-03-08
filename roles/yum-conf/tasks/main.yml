@@ -1,32 +1,32 @@
 ---
 # tasks file for yum-conf
-  - name: Add yum repository
-    yum_repository:
-      name: "{{item.name}}"
-      description: "{{item.name}}"
-      baseurl: "{{item.baseurl }}"
-      gpgkey:  "file://{{ item.gpgkey}} "
-      enabled: yes
-      gpgcheck: yes
-      sslverify: "{{ item.sslverify }}"
-    loop: "{{ yum_conf }} "
-    loop_control:
-      label: "{{ item.name }}"
+- name: Add yum repository
+  yum_repository:
+    name: "{{item.name}}"
+    description: "{{item.name}}"
+    baseurl: "{{item.baseurl }}"
+    gpgkey:  "file://{{ item.gpgkey}} "
+    enabled: yes
+    gpgcheck: yes
+    sslverify: "{{ item.sslverify }}"
+  loop: "{{ yum_conf }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-  - name: Check if gpg key exists in source
-    stat:
-      path: "{{ role_path }}/files/{{ item.gpgkey | basename }}"
-    register: file_stat
-    loop: "{{ yum_conf }} "
-    loop_control:
-      label: "{{ item.gpgkey | basename }}"
-    delegate_to: localhost
+- name: Check if gpg key exists in source
+  stat:
+    path: "{{ role_path }}/files/{{ item.gpgkey | basename }}"
+  register: file_stat
+  loop: "{{ yum_conf }}"
+  loop_control:
+    label: "{{ item.gpgkey | basename }}"
+  delegate_to: localhost
 
-  - name: Copy gpg key if gpg key exists in source
-    copy:
-      src:  "{{ item.stat.path }}"
-      dest: "{{ item.item.gpgkey }}"
-    loop: "{{ file_stat.results }}"
-    loop_control:
-      label: "{{ item.item.gpgkey | basename }}"
-    when: item.stat.exists
+- name: Copy gpg key if gpg key exists in source
+  copy:
+    src:  "{{ item.stat.path }}"
+    dest: "{{ item.item.gpgkey }}"
+  loop: "{{ file_stat.results }}"
+  loop_control:
+    label: "{{ item.item.gpgkey | basename }}"
+  when: item.stat.exists

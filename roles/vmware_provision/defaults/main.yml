@@ -4,5 +4,7 @@ vm_datastore: datastore_name
 vm_datacenter: datacenter
 vm_folder: folder
 vcenter_validate_cert: false
-
+vm_customization: 
+  dns_servers: 8.8.8.8
 vm_hardware_version: 13
+vm_guest_id: rhel7_64guest

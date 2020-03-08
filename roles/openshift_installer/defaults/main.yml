@@ -18,6 +18,10 @@ vcp_datecenter:
 vcp_datastore:
 
 registry_serever: mirror.example.com:5000
+setup_registry: no
+
+restricted_network: no
+ocp_pull_secret: 
 
 # In vault
 ###

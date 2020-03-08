@@ -7,5 +7,6 @@ packages:
   - curl
   - telnet
   - bind-utils
-
-timesync_ntp_provider: chrony
+  - libselinux-python
+  - libsemanage-python
+  - policycoreutils-python

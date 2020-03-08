@@ -1,0 +1,68 @@
+- name: Provision vms for LB check
+  hosts: bootstrap_grp #, masters_grp, infra_routers_grp
+  become: yes
+  gather_facts: no
+
+  vars_files:
+    - vault.yml
+    - vars/rhel_vmware.yml
+
+  vars:
+    http_port: 80
+    https_ports: 
+      - 443
+      - 6443
+      - 22623
+
+  tasks:    
+    - name: Create VM folder
+      command: "govc folder.create {{vm_folder}}"
+      environment:
+        GOVC_URL: "https://{{ vcenter_hostname }}/sdk"
+        GOVC_USERNAME: "{{ vcenter_username }}"
+        GOVC_PASSWORD: "{{ vcenter_password }}"
+        GOVC_INSECURE: "{{ vcenter_insecure_ssl }}"
+      register: output
+      when: vcenter_hostname | default()
+      failed_when: "'already exists' not in output.stderr and output.rc != 0"
+      changed_when: "output.stderr == '' and output.rc == 0"
+      delegate_to: localhost
+      run_once: true
+
+    - include_role:
+        name: vmware_provision
+      vars:
+        vm_state: poweredon
+        
+    - name: Wait for system to become reachable over SSH
+      wait_for_connection:
+        delay: 60
+        timeout: 300
+
+    - name: Gather facts for first time
+      setup:
+    
+    - name: Set proper fqdn hostname
+      command: hostnamectl set-hostname "{{ inventory_hostname + '.' + dns_domain }}"
+        
+    - name: Running role
+      include_role:
+        name: "{{ outer_item }}"
+      loop:        
+        - yum-conf
+        - common
+        - apache    
+      loop_control:
+        loop_var: outer_item
+
+    - name: force all notified handlers to run at this point, not waiting for normal sync points
+      meta: flush_handlers
+
+    - name: Test http/https port
+      uri:
+        url: "{% if item == 80 %}http{% else %}https{% endif %}://{{ inventory_hostname + '.' + dns_domain }}:{{item}}"
+        validate_certs: no
+      loop: "{{ [http_port] + https_ports }}"
+      loop_control:
+        label: "{{ inventory_hostname + '.' + dns_domain }}:{{item}}"
+      delegate_to: localhost

@@ -1,0 +1,9 @@
+192.168.0.178 ocp4-bastion.ocppoc.vsphere.lab.ltsai.com api.ocppoc.vsphere.lab.ltsai.com api-int.ocppoc.vsphere.lab.ltsai.com
+
+192.168.0.226 master0.ocppoc.vsphere.lab.ltsai.com etcd-0.ocppoc.vsphere.lab.ltsai.com
+192.168.0.227 master1.ocppoc.vsphere.lab.ltsai.com etcd-1.ocppoc.vsphere.lab.ltsai.com
+192.168.0.228 master2.ocppoc.vsphere.lab.ltsai.com etcd-2.ocppoc.vsphere.lab.ltsai.com
+
+192.168.0.229 worker0.ocppoc.vsphere.lab.ltsai.com 
+192.168.0.230 worker1.ocppoc.vsphere.lab.ltsai.com 
+192.168.0.231 worker2.ocppoc.vsphere.lab.ltsai.com 

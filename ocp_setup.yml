@@ -2,49 +2,42 @@
 - name: OpenShift Setup
   hosts: localhost
   become: no
-  gather_facts: no
 
   vars:
-    rhcos_image_dest_path: /var/www/html/install/
     rhcos_ignition_dest_path: /var/www/html/ignition
 
   vars_files:
     - vault.yml
 
   tasks:    
-    - name: Ensure /var/www/html/install exists
-      file:
-        path: "{{rhcos_image_dest_path}}"
-        state: directory  
-        owner: root
-        group: root
-        mode: 0644    
-      delegate_to: "{{ groups['mirror'][0] }}"
-
-    - name: Copy RHCOS image to mirror server /var/www/html/install
-      copy:
-        src: "{{rhcos_image_path}}"
-        dest: "{{rhcos_image_dest_path}}"
-      delegate_to: "{{ groups['mirror'][0] }}"
-
-    - name: Create boot iso
-      include_role:
-        name: custom_iso
-      vars:
-        rhcos_image_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/install/{{rhcos_image_path | basename}}"
-        ignition_url: "http://{{ groups['mirror'][0] + '.' + dns_domain }}/ignition"
-
     - name: Create OCP installer files
       include_role:
         name: openshift_installer
-      
-# - name: Provision OpenShift VMs
-#   hosts: localhost
-#   become: no
-#   gather_facts: no
 
-#   vars_files:
-#     - vault.yml
+- name: Destroy all OCP vms
+  import_playbook: destroy.yml
+
+- name: Provision OCP vms
+  hosts: ocp
+  become: yes
+  gather_facts: no
+
+  vars_files:
+    - vault.yml
+    - vars/rhel_vmware.yml
   
-#   tasks:
-#     - debug: msg: ""
+  tasks:
+    - include_role:
+        name: vmware_provision
+      vars:
+        vm_state: poweredon    
+        cdrom_iso: 
+          - type: iso
+            iso_path: "[{{iso_datastore}}] {{iso_datastore_path}}/{{inventory_hostname}}.iso"
+            controller_number: 0
+            unit_number: 0
+            state: present
+        vm_customization:
+        vm_template: 
+        vm_guest_id: rhel8_64Guest
+

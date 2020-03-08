@@ -6,32 +6,49 @@
       suffix: openshift
     register: tempfile
 
-  - name: "Untar openshift-client into {{ tempfile.path }}"
-    unarchive:
-      src: "{{openshift_client_file}}"
-      dest: "{{ tempfile.path }}"
-    
-  - name: Copy oc and kubectl to /usr/local/sbin
-    copy:
-      src: "{{ tempfile.path }}/{{item}}"
-      dest: /usr/local/sbin/
-      mode: '0755'
+  - name: Check if file exists
+    stat:
+      path: "/usr/local/bin/{{item}}"
     loop:
       - oc
       - kubectl
+    register: out
 
-  - name: Untar openshift-install into "{{ tempfile.path }}"
-    unarchive:
-      src: "{{openshift_installer_file}}"
-      dest: "{{ tempfile.path }}"
+  - block:
+    - name: "Untar openshift-client into {{ tempfile.path }}"
+      unarchive:
+        src: "{{openshift_client_file}}"
+        dest: "{{ tempfile.path }}"
+      
+    - name: Copy oc and kubectl to /usr/local/bin
+      copy:
+        src: "{{ tempfile.path }}/{{item}}"
+        dest: /usr/local/bin/
+        mode: '0755'
+      loop:
+        - oc
+        - kubectl
+    when: false in out.results | map(attribute='stat.exists')
 
-  - name: Copy installer command to /usr/local/sbin
-    copy:
-      src: "{{ tempfile.path }}/{{item}}"
-      dest: /usr/local/sbin/
-      mode: '0755'
-    loop:
-      - openshift-install
+  - name: Check if file exists
+    stat:
+      path: "/usr/local/bin/openshift-install"
+    register: out
+
+  - block:
+    - name: Untar openshift-install into "{{ tempfile.path }}"
+      unarchive:
+        src: "{{openshift_installer_file}}"
+        dest: "{{ tempfile.path }}"
+
+    - name: Copy installer command to /usr/local/bin
+      copy:
+        src: "{{ tempfile.path }}/{{item}}"
+        dest: /usr/local/bin/
+        mode: '0755'
+      loop:
+        - openshift-install
+    when: not out.stat.exists
 
   - name: Create Openshift deployment directories
     file:
@@ -55,38 +72,51 @@
     openssh_keypair:
       path: "{{ssh_key_path}}"
 
-  - name: Check for registry cert existence
-    stat:
-      path: /etc/pki/ca-trust/source/anchors/domain.crt
-    register: cert
+  - block:
+    - name: Check for registry cert existence
+      stat:
+        path: /etc/pki/ca-trust/source/anchors/domain.crt
+      register: cert
 
-  - name: Fetch registry certificate
-    fetch:
-      src: "{{remote_registry_cert}}"
-      dest: /etc/pki/ca-trust/source/anchors/domain.crt
-      flat: yes
-    delegate_to: "{{groups['mirror'][0]}}"
-    when: not cert.stat.exists
+    - name: Fetch registry certificate
+      fetch:
+        src: "{{remote_registry_cert}}"
+        dest: /etc/pki/ca-trust/source/anchors/domain.crt
+        flat: yes
+      delegate_to: "{{groups['mirror'][0]}}"
+      when: not cert.stat.exists
 
-  - name: update ca-trust
-    command: update-ca-trust
-    when: not cert.stat.exists
+    - name: update ca-trust
+      command: update-ca-trust
+      when: not cert.stat.exists
+
+    - name: b64encode the registry username and password
+      set_fact:
+        ocp_pull_secret: '{"auths":{"{{ registry_server }}": {"auth": "{{ username_password | b64encode }}"}}}'
+        cert_file: "{{ lookup('file', '/etc/pki/ca-trust/source/anchors/domain.crt') }}"
+      vars:
+        username_password: "{{ registry_username + ':' + registry_password }}"
+
+        #registry_auth: "{{ (registry_username + ':' + registry_password) | b64encode }}"
+        #"{{ (registry_username + ':' + registry_password) | b64encode }}"
+    
+    when: setup_registry
 
   - name: Generate install_config file
     template:
       src: install-config.yaml.j2
       dest: "{{ installation_dir }}/install-config.yaml"
     vars:
-      crt_var: "{{ lookup('file', '/etc/pki/ca-trust/source/anchors/domain.crt') }}"
+      crt_var: "{{ cert_file | default(omit) }}"
       ssh_var: "{{ lookup('file', ssh_key_path + '.pub') }}"
-      pull_secret: "{{ (registry_username + ':' + registry_password) | b64encode }}"
-       
-  - name: Mane a copy of install-config.yaml to /tmp
+      pull_secret: "{{ ocp_pull_secret | string }}"
+
+  - name: "Make a copy of install-config.yaml to {{ installation_dir }}"
     copy:
       src: "{{ installation_dir }}/install-config.yaml"
-      dest: /tmp
+      dest: "{{ installation_dir }}/install-config.yaml.bak"
       remote_src: yes
-
+       
   - name: Generate manifests files
     command: openshift-install create manifests --dir="{{installation_dir}}"
 
@@ -99,6 +129,23 @@
   - name: Create ignition files
     command: openshift-install create ignition-configs --dir="{{ installation_dir }}"
 
+  - name: "Ensure {{rhcos_ignition_dest_path}} exists"
+    file:
+      path: "{{rhcos_ignition_dest_path}}"
+      state: directory  
+      owner: root
+      group: root
+      mode: 0755   
+
+  - name: "Copy ignition files to {{rhcos_ignition_dest_path}}"
+    copy:
+      src: "{{ installation_dir }}/{{item}}"
+      dest: "{{rhcos_ignition_dest_path}}/{{item}}"
+      remote_src: yes
+    loop:
+      - bootstrap.ign
+      - master.ign
+      - worker.ign
   always:
     - name: Delete temporary directory
       file:

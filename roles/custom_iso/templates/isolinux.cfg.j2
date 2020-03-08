@@ -2,8 +2,9 @@
 # Server DVD iso. Diff this file with that file in the future to pick up
 # changes.
 serial 0
-default vesamenu.c32
-timeout 600
+DEFAULT linux
+TIMEOUT 20
+PROMPT 0
 
 display boot.msg
 
@@ -64,6 +65,7 @@ menu separator # insert an empty line
 
 label linux
   menu label ^Install RHEL CoreOS
+  menu default
   kernel /images/vmlinuz
   append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes {{boot_option}}
 menu separator # insert an empty line
