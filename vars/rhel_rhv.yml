@@ -1,5 +1,0 @@
----
-vm_guest_id: rhel_7x64
-vm_state: running
-vm_template: "{{ rhel_vm_template }}"
-hostname: "{{ inventory_hostname + '.' + dns_domain  }}"
