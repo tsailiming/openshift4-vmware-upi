@@ -146,7 +146,7 @@ vm_memory_mb: 7168
 vm_cpu: 4            
 vm_disks: 
   - size: 80 
-  	type: thin
+    type: thin
 ```
 
 ### Important Ansible variables
