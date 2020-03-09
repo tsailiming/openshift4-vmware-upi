@@ -130,6 +130,7 @@ all:
     iso_output_dir: /root/isos 
 
     # #pip_server: "{{ http_server }}"
+    # Authentication json file for local registry
     podman_auth_file: /root/.podmanauth.json
     podman_tls_verify: false
 

@@ -39,6 +39,8 @@ You will need to bring entire directory `/root/repos` to the target environment.
 ```
 
 ### RPMS
+
+If there is no Red Hat Satellite in the environment, you can bring in your own repoistories. 
 ``` bash
 # yum install -y yum-utils
 # reposync -n -p /root/repos --repoid rhel-7-server-rpms --repoid rhel-7-server-ansible-2-rpms --repoid rhel-7-server-extras-rpms
@@ -62,6 +64,8 @@ After perfoming an OC [mirror](https://docs.openshift.com/container-platform/4.3
 https://stedolan.github.io/jq/download/
 
 https://github.com/vmware/govmomi/releases
+
+govc is minimally required by the playbook.
 
 ```  bash
 cp /path/to/jq /root/repos/bin/jq
@@ -168,6 +172,8 @@ vm_disks:
 | yum_conf | If there is no Satallite, configure yum to point to the local repository |
 | use_vcp | Whether to integrate OCP with VMware Clod Provider | 
 
+Refer to the inventory file for the rest of the variables. 
+
 ### Super secretive vault.yml in the playbook directory
 
 Create a vault with the following vars:
@@ -230,3 +236,14 @@ To destroy all the vms, excluding bastion:
 ``` bash
 # ansible-playbook --ask-vault-pass destory.yml
 ```
+
+# Others
+
+## Sample dnsmasq
+
+A [sample](/examples) dnsamasq config has been provided. 
+
+## HAProxy stats page
+
+HAProxy on bastion has been configured with http://hostname:5005/haproxy_stats page.
+
