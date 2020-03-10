@@ -6,9 +6,8 @@ all:
       # Bastion is the host where the playbook is running. 
       bastion_grp:
         hosts:
-          bastion:
-            #ansible_host: 192.168.0.224
-            ansible_host: 192.168.0.178
+          ocp4-bastion:
+            ansible_host: 192.168.0.224
             setup_haproxy: yes
             setup_registry: yes          
          
@@ -123,38 +122,43 @@ all:
     
     # Created by (cd /opt/registry/data && tar cvzf /tmp/registry_data.tar.gz .)
     registry_data_tar_path: /root/repos/registry_data.tar.gz # If this does not exists, a blank registry will be created
-    rhcos_image_path: /root/repos/rhcos-4.2.0-x86_64-metal-bios.raw.gz
-    rhcos_installer_iso: /root/repos/rhcos-4.2.0-x86_64-installer.iso
-    openshift_client_file: /root/repos/openshift-client-linux-4.2.10.tar.gz
-    openshift_installer_file: /root/repos/openshift-install-linux-4.2.10.tar.gz
+    rhcos_image_path: /root/repos/rhcos-4.2.18-x86_64-metal-bios.raw.gz
+    rhcos_installer_iso: /root/repos/rhcos-4.2.18-x86_64-installer.iso
+    openshift_client_file: /root/repos/openshift-client-linux-4.2.20.tar.gz
+    openshift_installer_file: /root/repos/openshift-install-linux-4.2.20.tar.gz
+    openshift_extracted_installer: /root/repos/sbin/openshift-install
     iso_output_dir: /root/isos 
 
     # #pip_server: "{{ http_server }}"
     # Authentication json file for local registry
     podman_auth_file: /root/.podmanauth.json
-    podman_tls_verify: false
-
+ 
     timesync_ntp_servers:
       - hostname: pool.ntp.org
         iburst: yes
 
     vm_template: rhel7_template
 
-    restricted_network: no
-
     ########
     # If necessary, configure the local yum repo. 
     # yum_repos:
-    #   - name: rhel-7-server-ansible-2-rpms
-    #     src: /root/repos/rhel-7-server-ansible-2-rpms
-    #     dest: /var/www/html/repos/rhel-7-server-ansible-2-rpms
-      
+    #   - name: rhel-7-server-rpms
+    #     src: /root/repos/rhel-7-server-rpms
+    #     dest: /var/www/html/repos/rhel-7-server-rpms
+    #   - name: rhel-7-server-extras-rpms
+    #     src: /root/repos/rhel-7-server-extras-rpms
+    #     dest: /var/www/html/repos/rhel-7-server-extras-rpms
+
     # yum_conf:
-    #   - name: rhel-7-server-ansible-2-rpms
-    #     baseurl: "https://{{https_server}}/repos/rhel-7-server-ansible-2-rpms"
+    #   - name: rhel-7-server-rpms
+    #     baseurl: "{% if inventory_hostname != groups['bastion_grp'][0] %}https://{{https_server}}{% else %}file:///var/www/html{% endif %}/repos/repos/rhel-7-server-rpms"
     #     gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
     #     sslverify: no  
-    ########
+    #   - name: rhel-7-server-extras-rpms
+    #     baseurl: "{% if inventory_hostname != groups['bastion_grp'][0] %}https://{{https_server}}{% else %}file:///var/www/html{% endif %}/repos/repos/rhel-7-server-extras-rpms"
+    #     gpgkey: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+    #     sslverify: no  
+    #######
 
     # This should be in vault.yml
     # vcenter_hostname: 

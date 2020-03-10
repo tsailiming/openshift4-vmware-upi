@@ -17,10 +17,10 @@ vcp_password:
 vcp_datecenter:
 vcp_datastore:
 
-registry_serever: mirror.example.com:5000
+registry_server: mirror.example.com:5000
 setup_registry: no
+podman_auth_file: /root/.podmanauth.json
 
-restricted_network: no
 ocp_pull_secret: 
 
 # In vault
@@ -29,6 +29,7 @@ ocp_pull_secret:
 #registry_password:
 ####
 
-registry_path: /ocp4/openshift4
+registry_path: /ocp4/openshift
+
 remote_registry_cert: /etc/pki/ca-trust/source/anchors/domain.crt
 

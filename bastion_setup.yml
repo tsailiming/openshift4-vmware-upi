@@ -9,7 +9,6 @@
     - vault.yml
 
   vars:
-    podman_tls_verify: false
     httpd_port: 8080
     https_ports: 
       - 8443
@@ -28,10 +27,12 @@
     
     - name: Setup local yum repo
       include_role:
-        name: "{{item}}"
+        name: "{{outer_item}}"
       loop:
         - yum-repo
         - yum-conf
+      loop_control:
+        loop_var: outer_item
       when: yum_repos is defined and yum_conf is defined
 
     - name: Running role
@@ -64,15 +65,15 @@
           dest: "{{podman_auth_file}}"
         
       - name: Podman login to registry
-        command: podman login --authfile {{podman_auth_file}} {{registry_server}} --tls-verify={{podman_tls_verify}}
-      
+        command: podman login --authfile {{podman_auth_file}} {{registry_server}} 
       when: setup_registry        
 
     - name: Setup haproxy
       include_role:
         name: haproxy
       when: setup_haproxy
-              
+
+
     - name: Install packages for bastion
       yum:
         name: "{{item}}"
@@ -82,8 +83,4 @@
         - skopeo
         - buildah
         - genisoimage
-
-
-      
-
-      
+  

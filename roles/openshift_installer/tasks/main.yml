@@ -8,7 +8,7 @@
 
   - name: Check if file exists
     stat:
-      path: "/usr/local/bin/{{item}}"
+      path: "/usr/local/sbin/{{item}}"
     loop:
       - oc
       - kubectl
@@ -20,20 +20,15 @@
         src: "{{openshift_client_file}}"
         dest: "{{ tempfile.path }}"
       
-    - name: Copy oc and kubectl to /usr/local/bin
+    - name: Copy oc and kubectl to /usr/local/sbin
       copy:
         src: "{{ tempfile.path }}/{{item}}"
-        dest: /usr/local/bin/
-        mode: '0755'
+        dest: /usr/local/sbin/
+        mode: 0755
       loop:
         - oc
         - kubectl
     when: false in out.results | map(attribute='stat.exists')
-
-  - name: Check if file exists
-    stat:
-      path: "/usr/local/bin/openshift-install"
-    register: out
 
   - block:
     - name: Untar openshift-install into "{{ tempfile.path }}"
@@ -41,14 +36,50 @@
         src: "{{openshift_installer_file}}"
         dest: "{{ tempfile.path }}"
 
-    - name: Copy installer command to /usr/local/bin
+    - name: Copy installer command to /usr/local/sbin
       copy:
         src: "{{ tempfile.path }}/{{item}}"
-        dest: /usr/local/bin/
-        mode: '0755'
+        dest: /usr/local/sbin/
+        mode: 0755
       loop:
         - openshift-install
-    when: not out.stat.exists
+    when: not setup_registry
+
+  - name: Copy extracted openshift-install for disconnected setup
+    copy:
+      src: "{{openshift_extracted_installer}}"
+      dest: /usr/local/sbin/
+      mode: 0755
+    loop:
+      - openshift-install          
+    when: setup_registry
+
+  - name: Get openshift-install version
+    command: /usr/local/sbin/openshift-install version
+    register: oc_version
+
+  - block:
+      - name: Get openshift release image for disconnected install
+        set_fact:
+          openshift_release_image: "{{oc_version.stdout_lines[-1].split()[-1]}}"
+
+      - name: Get release image path for disconnected install
+        set_fact:
+          registry_info: "{{lookup('docker', openshift_release_image)}}"
+
+      - name: Verify registry path is correct for disconnected install
+        assert:
+          that: "{{registry_info.domain == registry_server}}"
+          fail_msg: 'openshift-install is not correct. Check openshift-install version'
+          success_msg: 'openshift-install is correct'
+
+      - name: Verify release image is accessible for disconnected install
+        command: podman pull "{{openshift_release_image}}" --authfile "{{podman_auth_file}}"
+        
+      - name: Delete local release image 
+        command: podman rmi "{{openshift_release_image}}"
+        
+    when: setup_registry
 
   - name: Create Openshift deployment directories
     file:
@@ -72,34 +103,13 @@
     openssh_keypair:
       path: "{{ssh_key_path}}"
 
-  - block:
-    - name: Check for registry cert existence
-      stat:
-        path: /etc/pki/ca-trust/source/anchors/domain.crt
-      register: cert
-
-    - name: Fetch registry certificate
-      fetch:
-        src: "{{remote_registry_cert}}"
-        dest: /etc/pki/ca-trust/source/anchors/domain.crt
-        flat: yes
-      delegate_to: "{{groups['mirror'][0]}}"
-      when: not cert.stat.exists
-
-    - name: update ca-trust
-      command: update-ca-trust
-      when: not cert.stat.exists
-
-    - name: b64encode the registry username and password
-      set_fact:
-        ocp_pull_secret: '{"auths":{"{{ registry_server }}": {"auth": "{{ username_password | b64encode }}"}}}'
-        cert_file: "{{ lookup('file', '/etc/pki/ca-trust/source/anchors/domain.crt') }}"
-      vars:
-        username_password: "{{ registry_username + ':' + registry_password }}"
-
-        #registry_auth: "{{ (registry_username + ':' + registry_password) | b64encode }}"
-        #"{{ (registry_username + ':' + registry_password) | b64encode }}"
-    
+  - name: b64encode the registry username and password
+    set_fact:
+      ocp_pull_secret: '{"auths":{"{{ registry_server }}": {"auth": "{{ username_password | b64encode }}"}}}'
+      cert_file: "{{ lookup('file', remote_registry_cert) }}"
+      registry_path: "{{ registry_info.path }}"
+    vars:
+      username_password: "{{ registry_username + ':' + registry_password }}"        
     when: setup_registry
 
   - name: Generate install_config file
@@ -109,8 +119,8 @@
     vars:
       crt_var: "{{ cert_file | default(omit) }}"
       ssh_var: "{{ lookup('file', ssh_key_path + '.pub') }}"
-      pull_secret: "{{ ocp_pull_secret | string }}"
-
+      pull_secret: "{{ ocp_pull_secret | to_json }}"
+      
   - name: "Make a copy of install-config.yaml to {{ installation_dir }}"
     copy:
       src: "{{ installation_dir }}/install-config.yaml"
@@ -146,6 +156,7 @@
       - bootstrap.ign
       - master.ign
       - worker.ign
+
   always:
     - name: Delete temporary directory
       file:

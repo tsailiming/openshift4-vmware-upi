@@ -8,13 +8,13 @@
     - podman
     - httpd-tools
     - tar 
+    - openssl
 
 - name: pip install 
   pip:
     name: "{{ item }}"
     extra_args: "--no-index --find-links {{pip_path}}" 
   loop:
-    - cryptography
     - passlib
     - bcrypt
 
@@ -33,29 +33,46 @@
     path: /opt/registry/certs/domain.crt
   register: cert
 
+# openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -out domain.crt
+- name: Create self-signed cert
+  command: |
+    openssl req -newkey rsa:4096 -days 365 -nodes -sha256 -x509 \
+    -subj "/CN={{ansible_fqdn}}" \
+    -keyout /opt/registry/certs/domain.key 
+    -out /opt/registry/certs/domain.crt
+  when: not cert.stat.exists
+
 # openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 365 -out domain.crt  
-- name: Generate private key
-  openssl_privatekey:
-    path: /opt/registry/certs/domain.key
-    size: 4096
-    type: RSA
-  when: not cert.stat.exists
+# - name: Generate private key
+#   openssl_privatekey:
+#     path: /opt/registry/certs/domain.key
+#     size: 4096
+#     type: RSA
+#     select_crypto_backend: cryptography
+#   when: not cert.stat.exists
 
-- name: Generate csr
-  openssl_csr:
-    path: /opt/registry/certs/domain.csr
-    privatekey_path: /opt/registry/certs/domain.key
-    common_name: "{{ansible_fqdn}}"
-  when: not cert.stat.exists
+# This does not generate a 
+# Subject: C=XX, L=Default City, O=Default Company Ltd, CN=ocp4-bastion.ocppoc.vsphere.lab.ltsai.com ..
+# - name: Generate csr
+#   openssl_csr:
+#     path: /opt/registry/certs/domain.csr
+#     privatekey_path: /opt/registry/certs/domain.key
+#     common_name: "{{ansible_fqdn}}"
+#     organization_name: 'Default Company Ltd'
+#     locality_name: 'Default  City'
+#     country_name: XX
+#     select_crypto_backend: cryptography
+#   when: not cert.stat.exists
 
-- name: Generate self-signed certificate
-  openssl_certificate:
-    path: /opt/registry/certs/domain.crt
-    privatekey_path: /opt/registry/certs/domain.key
-    csr_path: /opt/registry/certs/domain.csr
-    selfsigned_digest: sha256
-    provider: selfsigned
-  when: not cert.stat.exists
+# - name: Generate self-signed certificate
+#   openssl_certificate:
+#     path: /opt/registry/certs/domain.crt
+#     privatekey_path: /opt/registry/certs/domain.key
+#     csr_path: /opt/registry/certs/domain.csr
+#     selfsigned_digest: sha256
+#     provider: selfsigned
+#     select_crypto_backend: cryptography
+#   when: not cert.stat.exists
 
 - name: Copy cert to ca-trust
   copy:

@@ -29,13 +29,13 @@ platform:
   none: {} 
 {% endif %}
 pullSecret: '{{pull_secret}}'
-{% if restricted_network %}
+{% if setup_registry %}
 imageContentSources:
 - mirrors:
-  - {{ registry_server }}{{registry_path}}
+  - {{ registry_server }}/{{registry_path}}
   source: quay.io/openshift-release-dev/ocp-release
 - mirrors:
-  - {{ registry_server }}{{registry_path}}
+  - {{ registry_server }}/{{registry_path}}
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 additionalTrustBundle: |
 {{ crt_var|indent(2, true) }}

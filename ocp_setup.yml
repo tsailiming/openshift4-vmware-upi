@@ -1,6 +1,7 @@
 ---
 - name: OpenShift Setup
-  hosts: localhost
+  hosts: bastion_grp
+  connection: local
   become: no
 
   vars:
@@ -37,7 +38,7 @@
             controller_number: 0
             unit_number: 0
             state: present
-        vm_customization:
+        vm_customization: {}
         vm_template: 
         vm_guest_id: rhel8_64Guest
 

@@ -14,6 +14,7 @@ This repository contains a collection of Ansible playbooks to help to install Re
 | ocp_setup | This creates the installer and boot each vm with the iso.|
 | destroy | This destroys the OCP vms, excluding the bastion. |
 | remove_cdrom | This ejects the CDROM from the OCP nodes. |
+| registry_setup | This helps to setup a local registry to mirror images |
 
 # Prerequisite Setup
 
@@ -35,7 +36,7 @@ You will need to bring entire directory `/root/repos` to the target environment.
 ``` bash
 # yum localinstall -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/python2-pip-8.1.2-12.el7.noarch.rpm
 # mkdir -p /root/repos/pip
-# (cd /rept/reppos/pip && pip download passlib cryptography pyvmomi bcrypt dnspython netaddr jmespath --no-cache-dir)
+# (cd /rept/reppos/pip && pip download passlib pyvmomi bcrypt dnspython netaddr jmespath --no-cache-dir)
 ```
 
 ### RPMS
@@ -46,12 +47,21 @@ If there is no Red Hat Satellite in the environment, you can bring in your own r
 # reposync -n -p /root/repos --repoid rhel-7-server-rpms --repoid rhel-7-server-ansible-2-rpms --repoid rhel-7-server-extras-rpms
 ```
 
+``` bash
+( cd root/repos && curl -O https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/python2-pip-8.1.2-12.el7.noarch.rpm)
+```
+
 ### OpenShift images for base installation
 
-After perfoming an OC [mirror](https://docs.openshift.com/container-platform/4.3/installing/install_config/installing-restricted-networks-preparations.html#installation-mirror-repository_installing-restricted-networks-preparations)
+After performing an OC [mirror](https://docs.openshift.com/container-platform/4.3/installing/install_config/installing-restricted-networks-preparations.html#installation-mirror-repository_installing-restricted-networks-preparations). Alternatively you can use this [Playbook](https://github.com/tsailiming/openshift4-disconnected/tree/master/mirror). 
 
 ```  bash
 # (cd /opt/registry/data && tar cvzf /root/repos/registry_data.tar.gz .)
+```
+
+If running as a disconnected installation, you will need to extract the openshift-installer after mirroring and copy into `/root/repos/sbin`.
+``` bash
+cp openshift-install /root/repos/sbin
 ```
 
 ### Export this git repository
@@ -68,8 +78,9 @@ https://github.com/vmware/govmomi/releases
 govc is minimally required by the playbook.
 
 ```  bash
-cp /path/to/jq /root/repos/bin/jq
-cp /path/to/govc /root/repos/bin/govc
+mkdir -p /root/repos/sbin
+cp /path/to/jq /root/repos/sbin/jq
+cp /path/to/govc /root/repos/sbin/govc
 ```
 
 ### Prepare registy docker image
@@ -87,6 +98,8 @@ cp /path/to/govc /root/repos/bin/govc
 # curl -O https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.2/4.2.0/rhcos-4.2.0-x86_64-metal-bios.raw.gz
 # curl -O https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.2/4.2.0/rhcos-4.2.0-x86_64-installer.iso
 ```
+
+
 # Setup
 
 ## Configuring the bastion host
@@ -107,7 +120,7 @@ If the system can be registered to Satellite, register and enable the following 
 
 Copy binaries:
 ``` bash
-cp /root/repos/bin/{govc,jq} /usr/local/bin/
+cp /root/repos/sbin/{govc,jq} /usr/local/sbin/
 ```
 
 Bootstrap packages. If there is no Satellite, `yum localinstall` from the local `/root/repos` repositories.
@@ -117,7 +130,7 @@ Bootstrap packages. If there is no Satellite, `yum localinstall` from the local 
 
 Install python pip:
 ``` bash
-# yum localinstall -y /root/repos/epel/7/x86_64/Packages/p/python2-pip-8.1.2-10.el7.noarch.rpm
+# yum localinstall -y /root/repos/python2-pip-8.1.2-10.el7.noarch.rpm
 ```
 
 Untar Ansible playbooks
@@ -158,7 +171,7 @@ vm_disks:
 | Name | Description|
 | - | - |
 | setup_haproxy| Whether to configure haproxy on bastion for apps and masters |
-| setup_registry| Whether to configure a registry on bastion |
+| setup_registry| Whether to configure a registry on bastion. This implies a restricted network installation. |
 | cluster_name| OCP cluster name|
 | base_domain| OCP base domain name|
 | openshift_cluster_network_cidr | OpenShift Cluster network CIDR|
@@ -167,7 +180,6 @@ vm_disks:
 | apps_use_wildcard_dns | Whether to check for wildcard DNS |
 | timesync_ntp_servers | ntp servers to configure |
 | vm_template | RHEL 7 vm template name | 
-| restricted_network | Whether this is restricted network installation |
 | yum_repos | If there is no Satallite, configure the local yum repos | 
 | yum_conf | If there is no Satallite, configure yum to point to the local repository |
 | use_vcp | Whether to integrate OCP with VMware Clod Provider | 
