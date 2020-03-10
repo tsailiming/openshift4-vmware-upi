@@ -129,7 +129,6 @@ all:
     openshift_extracted_installer: /root/repos/sbin/openshift-install
     iso_output_dir: /root/isos 
 
-    # #pip_server: "{{ http_server }}"
     # Authentication json file for local registry
     podman_auth_file: /root/.podmanauth.json
  
@@ -168,11 +167,6 @@ all:
 
     # vcp_username: 
     # vcp_password: 
-
-    # rhv_username: admin@internal
-    # rhv_password: system
-    # rhv_hostname:       
-    # rhv_insecure_cert: true
 
     # registry_username: openshift
     # registry_password: password
