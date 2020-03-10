@@ -1,0 +1,35 @@
+---
+- name: Setup registry
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Setup registry
+      include_role: 
+        name: registry
+
+    - name: b64encode registry authentication string
+      set_fact:
+        password_string: "{{registry_username + ':' + registry_password }}"
+        
+    - name: Create authentication json string
+      set_fact: 
+        auth_file_content: 
+          auths: '{ "{{ registry_server }}": {"auth": "{{ password_string | b64encode }}"} }'   
+
+    - name: "Save credentials to {{podman_auth_file}}"
+      copy:
+        content: "{{auth_file_content | to_nice_json}}"
+        dest: "{{podman_auth_file}}"
+      
+    - name: Podman login to registry
+      command: podman login --authfile {{podman_auth_file}} {{registry_server}} 
+               
+
+
+
+
+      
+
+      
