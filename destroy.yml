@@ -11,7 +11,7 @@
   tasks:
     - name: "List of all ocp vms in {{vm_folder}}"
       debug:
-        var: groups['ocp'] | list
+        var: groups['ocp'] | list | sort
       delegate_to: localhost
       run_once: true
 
