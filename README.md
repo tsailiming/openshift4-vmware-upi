@@ -54,7 +54,7 @@ If there is no Red Hat Satellite in the environment, you can bring in your own r
 ```
 
 ``` bash
-( cd root/repos && curl -O https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/python2-pip-8.1.2-12.el7.noarch.rpm)
+# ( cd root/repos && curl -O https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/python2-pip-8.1.2-12.el7.noarch.rpm)
 ```
 
 ### OpenShift images for base installation
@@ -67,7 +67,7 @@ After performing an OC [mirror](https://docs.openshift.com/container-platform/4.
 
 If running as a disconnected installation, you will need to extract the openshift-installer after mirroring and copy into `/root/repos/sbin`.
 ``` bash
-cp openshift-install /root/repos/sbin
+# cp openshift-install /root/repos/sbin
 ```
 
 ### Export this git repository
@@ -84,9 +84,9 @@ https://github.com/vmware/govmomi/releases
 govc is minimally required by the playbook.
 
 ```  bash
-mkdir -p /root/repos/sbin
-cp /path/to/jq /root/repos/sbin/jq
-cp /path/to/govc /root/repos/sbin/govc
+# mkdir -p /root/repos/sbin
+# cp /path/to/jq /root/repos/sbin/jq
+# cp /path/to/govc /root/repos/sbin/govc
 ```
 
 ### Prepare registy docker image
