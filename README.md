@@ -113,7 +113,7 @@ After you have provisioned the bastion host, ensure the fqdn, network and `/etc/
 
 Copy /root/repos into bastion:
 ``` bash
-cp -vr /mnt/repos /root/ 
+# cp -vr /mnt/repos /root/ 
 ```
 
 If the system can be registered to Satellite, register and enable the following repos:
