@@ -36,7 +36,13 @@ You will need to bring entire directory `/root/repos` to the target environment.
 ``` bash
 # yum localinstall -y https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/python2-pip-8.1.2-12.el7.noarch.rpm
 # mkdir -p /root/repos/pip
-# (cd /rept/reppos/pip && pip download passlib pyvmomi bcrypt dnspython netaddr jmespath --no-cache-dir)
+# (cd /root/repos/pip && pip download passlib pyvmomi bcrypt dnspython netaddr jmespath docker-image-py --no-cache-dir)
+```
+
+To avoild building on the target bastion, you will have to do the following for the [regex](https://pypi.org/project/regex/) module:
+``` bash
+# yum install -y gcc python-devel
+# (cd /tmp && pip download regex && tar xvzf regex*.tar.gz && cd regex* && python setup.py bdist_wheel && cp dist/*.whl /root/repos/pip)
 ```
 
 ### RPMS

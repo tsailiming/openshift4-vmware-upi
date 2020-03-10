@@ -6,6 +6,14 @@
       suffix: openshift
     register: tempfile
 
+  - name: pip install 
+    pip:
+      name: "{{ item }}"
+      extra_args: "--no-index --find-links {{pip_path}}" 
+    loop:
+      - "{{lookup('fileglob', pip_path + '/regex*.whl', wantlist=True) | first}}"
+      - docker-image-py
+
   - name: Check if file exists
     stat:
       path: "/usr/local/sbin/{{item}}"

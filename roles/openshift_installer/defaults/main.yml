@@ -29,6 +29,8 @@ ocp_pull_secret:
 #registry_password:
 ####
 
+pip_path: /root/repos/pip
+
 registry_path: /ocp4/openshift
 
 remote_registry_cert: /etc/pki/ca-trust/source/anchors/domain.crt
