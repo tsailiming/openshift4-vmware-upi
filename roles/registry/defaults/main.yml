@@ -10,3 +10,6 @@ registry_image_tar_path: /root/repos/registry.tar
 registry_data_tar_path: /root/repos/registry_data.tar.gz
 
 podman_auth_file: /root/.podmanauth
+
+pip_path: /root/repos/pip
+pip_extra_args: "--no-index --find-links {{pip_path}}"

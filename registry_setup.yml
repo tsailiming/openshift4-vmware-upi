@@ -4,10 +4,18 @@
   become: yes
   gather_facts: yes
 
+  vars:
+    registry_server: "{{ansible_fqdn}}:5000"
+
+  vars_files:
+    - vault.yml
+    
   tasks:
     - name: Setup registry
       include_role: 
         name: registry
+      vars:
+        pip_extra_args: 
 
     - name: b64encode registry authentication string
       set_fact:

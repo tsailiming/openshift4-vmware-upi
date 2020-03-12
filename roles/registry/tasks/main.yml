@@ -13,7 +13,7 @@
 - name: pip install 
   pip:
     name: "{{ item }}"
-    extra_args: "--no-index --find-links {{pip_path}}" 
+    extra_args: "{{pip_extra_args}}" 
   loop:
     - passlib
     - bcrypt
@@ -102,13 +102,21 @@
     mode: 0644
   when: not passwd.stat.exists
 
-- name: Copy registry image
-  copy:
-    src: "{{registry_image_tar_path}}"
-    dest: "/tmp/{{registry_image_tar_path | basename}}"
+- name: Check if registry image tarball exists
+  stat:
+    path: "{{registry_image_tar_path}}"
+  register: registry_image_out
+  delegate_to: localhost
 
-- name: Import registry container image
-  command: podman image load -i "/tmp/{{registry_image_tar_path | basename}}"
+- block:
+  - name: Copy registry image
+    copy:
+      src: "{{registry_image_tar_path}}"
+      dest: "/tmp/{{registry_image_tar_path | basename}}"
+
+  - name: Import registry container image
+    command: podman image load -i "/tmp/{{registry_image_tar_path | basename}}"
+  when: registry_image_out.stat.exists
 
 # This may be a connected registry mirror
 - name: Check if registry data tarball exists
