@@ -265,3 +265,7 @@ A [sample](/examples) dnsamasq config has been provided.
 
 HAProxy on bastion has been configured with http://hostname:5005/haproxy_stats page.
 
+## OpenShift 4 day 2 Ops
+
+[Day 2 Ansible Repo](https://github.com/tsailiming/openshift4-day2)
+
