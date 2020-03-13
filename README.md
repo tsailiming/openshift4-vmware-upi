@@ -275,3 +275,13 @@ HAProxy on bastion has been configured with http://hostname:5005/haproxy_stats p
 
 [Day 2 Ansible Repo](https://github.com/tsailiming/openshift4-day2)
 
+# TODO
+
+* Able to customize VM folder name
+
+* Check VM name length is <= 80
+
+* Check for exitence/creation of vm folder early and not at lb check
+
+* Scale worker playbook
+
