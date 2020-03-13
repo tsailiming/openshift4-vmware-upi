@@ -9,7 +9,7 @@ This repository contains a collection of Ansible playbooks to help to install Re
 | network_check  | This checks the network, dns and various connectivity of the installation environment.   |  
 | bastion_setup | This prepare the bastion server for OCP installation, including seting up a haproxy or mirrored registry.  |   
 | lb_check_setup  |  This installs new vms for the load balancer check. | 
-| lb_check| This will run checks against the load balancer to ensure it is configured with the correct backends and SSL passthrough is correct. |
+| lb_check| This will run checks against the load balancer to ensure it is configured with the correct backends and SSL passthrough is correct. No connection to the load balancer is required. |
 | create_iso| This creates a boot iso for each node. |
 | ocp_setup | This creates the installer and boot each vm with the iso.|
 | destroy | This destroys the OCP vms, excluding the bastion. |
@@ -18,7 +18,7 @@ This repository contains a collection of Ansible playbooks to help to install Re
 
 # Prerequisite Setup
 
-## Preparing a RHEL 7 template for bastion and Load Balancer check
+## Preparing a RHEL 7 template for bastion and load balancer check
 
 ``` bash
 # /bin/sed -i '/^(HWADDR|UUID)=/d' /etc/sysconfig/network-scripts/ifcfg-e*
@@ -58,6 +58,12 @@ If there is no Red Hat Satellite in the environment, you can bring in your own r
 ```
 
 ### OpenShift images for base installation
+
+You can setup a local registry by running the `setup_registry.yml` playbook. This requires Internet connection and pip installed.
+
+``` bash
+# ansible-playbook --ask-vault-pass setup_registry.yml
+```
 
 After performing an OC [mirror](https://docs.openshift.com/container-platform/4.3/installing/install_config/installing-restricted-networks-preparations.html#installation-mirror-repository_installing-restricted-networks-preparations). Alternatively you can use this [Playbook](https://github.com/tsailiming/openshift4-disconnected/tree/master/mirror). 
 
