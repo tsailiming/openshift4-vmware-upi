@@ -28,7 +28,7 @@ This repository contains a collection of Ansible playbooks to help to install Re
 
 Then export this vm into a VMware OVA file. 
 
-## Bringing your own repos 
+## Bringing your own repos for a disconnected install
 
 You will need to bring entire directory `/root/repos` to the target environment. 
 
@@ -135,7 +135,7 @@ Copy binaries:
 cp /root/repos/sbin/{govc,jq} /usr/local/sbin/
 ```
 
-Bootstrap packages. If there is no Satellite, `yum localinstall` from the local `/root/repos` repositories.
+Bootstrap packages. If there is no Satellite, `yum localinstall` from the local `/root/repos` repositories. The playbooks have been tested with Ansible 2.9.
 ``` bash
 # yum install ansible rhel-system-roles
 ```
